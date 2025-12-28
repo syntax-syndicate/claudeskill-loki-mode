@@ -411,10 +411,12 @@ start_kanban_server() {
     log_step "Launching Vibe Kanban server..."
 
     # Try to start vibe-kanban
+    local kanban_log="$(pwd)/.loki/logs/kanban.log"
+    touch "$kanban_log"
     (
         cd .loki/kanban
         npx vibe-kanban --port $KANBAN_PORT 2>&1 | while read line; do
-            echo "[kanban] $line" >> ../.loki/logs/kanban.log
+            echo "[kanban] $line" >> "$kanban_log"
         done
     ) &
     KANBAN_PID=$!
