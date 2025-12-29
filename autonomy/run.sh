@@ -715,17 +715,20 @@ build_prompt() {
 
     local sdlc_instruction="SDLC_PHASES_ENABLED: [$phases]. Execute ALL enabled phases in order. For each phase: run tests, log results to .loki/logs/, fail the phase if critical issues found. See SKILL.md for detailed phase instructions."
 
+    # Codebase Analysis Mode - when no PRD provided, analyze existing codebase first
+    local analysis_instruction="CODEBASE_ANALYSIS_MODE: No PRD provided. FIRST: Analyze the existing codebase thoroughly - scan directory structure, read package.json/requirements.txt/go.mod, examine README, understand architecture from main entry points. THEN: Generate a comprehensive PRD at .loki/generated-prd.md covering: 1) Project overview, 2) Current features, 3) Tech stack, 4) Architecture, 5) Areas for improvement, 6) Missing tests/security/docs. FINALLY: Proceed with SDLC phases using the generated PRD as requirements baseline."
+
     if [ $retry -eq 0 ]; then
         if [ -n "$prd" ]; then
             echo "Loki Mode with PRD at $prd. $sdlc_instruction $autonomous_suffix"
         else
-            echo "Loki Mode. $sdlc_instruction $autonomous_suffix"
+            echo "Loki Mode. $analysis_instruction $sdlc_instruction $autonomous_suffix"
         fi
     else
         if [ -n "$prd" ]; then
             echo "Loki Mode - Resume from checkpoint. PRD at $prd. This is retry #$retry. Check .loki/state/ for progress and continue autonomously. $sdlc_instruction $autonomous_suffix"
         else
-            echo "Loki Mode - Resume from checkpoint. This is retry #$retry. Check .loki/state/ for progress and continue autonomously. $sdlc_instruction $autonomous_suffix"
+            echo "Loki Mode - Resume from checkpoint. This is retry #$retry. Check .loki/state/ for progress and continue autonomously. If .loki/generated-prd.md exists, use it as requirements baseline. $analysis_instruction $sdlc_instruction $autonomous_suffix"
         fi
     fi
 }
@@ -739,7 +742,33 @@ run_autonomous() {
 
     log_header "Starting Autonomous Execution"
 
-    log_info "PRD: ${prd_path:-Interactive}"
+    # Auto-detect PRD if not provided
+    if [ -z "$prd_path" ]; then
+        log_step "No PRD provided, searching for existing PRD files..."
+        local found_prd=""
+
+        # Search common PRD file patterns
+        for pattern in "PRD.md" "prd.md" "REQUIREMENTS.md" "requirements.md" "SPEC.md" "spec.md" \
+                       "docs/PRD.md" "docs/prd.md" "docs/REQUIREMENTS.md" "docs/requirements.md" \
+                       "docs/SPEC.md" "docs/spec.md" ".github/PRD.md" "PROJECT.md" "project.md"; do
+            if [ -f "$pattern" ]; then
+                found_prd="$pattern"
+                break
+            fi
+        done
+
+        if [ -n "$found_prd" ]; then
+            log_info "Found existing PRD: $found_prd"
+            prd_path="$found_prd"
+        elif [ -f ".loki/generated-prd.md" ]; then
+            log_info "Using previously generated PRD: .loki/generated-prd.md"
+            prd_path=".loki/generated-prd.md"
+        else
+            log_info "No PRD found - will analyze codebase and generate one"
+        fi
+    fi
+
+    log_info "PRD: ${prd_path:-Codebase Analysis Mode}"
     log_info "Max retries: $MAX_RETRIES"
     log_info "Base wait: ${BASE_WAIT}s"
     log_info "Max wait: ${MAX_WAIT}s"

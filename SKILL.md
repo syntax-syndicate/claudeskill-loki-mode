@@ -40,6 +40,100 @@ claude --dangerously-skip-permissions
 
 **If project is complete:** Do NOT ask "What would you like to do next?" Instead, create the `.loki/COMPLETED` file and provide a final status report. The system will exit cleanly.
 
+## Codebase Analysis Mode (No PRD Provided)
+
+When Loki Mode is invoked WITHOUT a PRD, it operates in **Codebase Analysis Mode**:
+
+### Step 1: PRD Auto-Detection
+The runner script automatically searches for existing PRD-like files:
+- `PRD.md`, `prd.md`, `REQUIREMENTS.md`, `requirements.md`
+- `SPEC.md`, `spec.md`, `PROJECT.md`, `project.md`
+- `docs/PRD.md`, `docs/prd.md`, `docs/REQUIREMENTS.md`
+- `.github/PRD.md`
+
+If found, that file is used as the PRD.
+
+### Step 2: Codebase Analysis (if no PRD found)
+Perform a comprehensive analysis of the existing codebase:
+
+```bash
+# 1. Understand project structure
+tree -L 3 -I 'node_modules|.git|dist|build|coverage'
+ls -la
+
+# 2. Identify tech stack
+cat package.json 2>/dev/null     # Node.js
+cat requirements.txt 2>/dev/null  # Python
+cat go.mod 2>/dev/null            # Go
+cat Cargo.toml 2>/dev/null        # Rust
+cat pom.xml 2>/dev/null           # Java
+cat Gemfile 2>/dev/null           # Ruby
+
+# 3. Read existing documentation
+cat README.md 2>/dev/null
+cat CONTRIBUTING.md 2>/dev/null
+
+# 4. Identify entry points and architecture
+# - Look for src/index.*, app.*, main.*
+# - Identify API routes, database models, UI components
+```
+
+**Analysis Output:** Create detailed notes about:
+1. **Project Overview** - What does this project do?
+2. **Tech Stack** - Languages, frameworks, databases, cloud services
+3. **Architecture** - Monolith vs microservices, frontend/backend split
+4. **Current Features** - List all functional capabilities
+5. **Code Quality** - Test coverage, linting, types, documentation
+6. **Security Posture** - Auth method, secrets handling, dependencies
+7. **Areas for Improvement** - Missing tests, security gaps, tech debt
+
+### Step 3: Generate PRD
+Create a comprehensive PRD at `.loki/generated-prd.md`:
+
+```markdown
+# Generated PRD: [Project Name]
+
+## Executive Summary
+[2-3 sentence overview based on codebase analysis]
+
+## Current State
+- **Tech Stack:** [list]
+- **Features:** [list of implemented features]
+- **Test Coverage:** [percentage if detectable]
+
+## Requirements (Baseline)
+These are the inferred requirements based on existing implementation:
+1. [Feature 1 - how it should work]
+2. [Feature 2 - how it should work]
+...
+
+## Identified Gaps
+- [ ] Missing unit tests for: [list]
+- [ ] Security issues: [list]
+- [ ] Missing documentation: [list]
+- [ ] Performance concerns: [list]
+- [ ] Accessibility issues: [list]
+
+## Recommended Improvements
+1. [Improvement 1]
+2. [Improvement 2]
+...
+
+## SDLC Execution Plan
+Execute all enabled phases using this PRD as baseline.
+```
+
+### Step 4: Proceed with SDLC Phases
+Use the generated PRD as the requirements baseline and execute all enabled SDLC phases:
+- UNIT_TESTS - Test existing functionality
+- API_TESTS - Verify all endpoints
+- E2E_TESTS - Test user flows
+- SECURITY - Audit for vulnerabilities
+- PERFORMANCE - Benchmark current state
+- ACCESSIBILITY - Check WCAG compliance
+- CODE_REVIEW - 3-way parallel review
+- And all other enabled phases
+
 ## SDLC Testing Phases
 
 The prompt includes `SDLC_PHASES_ENABLED: [...]` listing which phases to execute. Execute each enabled phase in order. Log results to `.loki/logs/sdlc-{phase}-{timestamp}.md`.

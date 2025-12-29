@@ -5,6 +5,27 @@ All notable changes to Loki Mode will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2025-12-28
+
+### Added
+- **Codebase Analysis Mode** - When no PRD is provided, Loki Mode now:
+  1. **Auto-detects PRD files** - Searches for `PRD.md`, `REQUIREMENTS.md`, `SPEC.md`, `PROJECT.md` and docs variants
+  2. **Analyzes existing codebase** - If no PRD found, performs comprehensive codebase analysis:
+     - Scans directory structure and identifies tech stack
+     - Reads package.json, requirements.txt, go.mod, etc.
+     - Examines README and entry points
+     - Identifies current features and architecture
+  3. **Generates PRD** - Creates `.loki/generated-prd.md` with:
+     - Project overview and current state
+     - Inferred requirements from implementation
+     - Identified gaps (missing tests, security, docs)
+     - Recommended improvements
+  4. **Proceeds with SDLC** - Uses generated PRD as baseline for all testing phases
+
+### Fixed
+- Dashboard 404 errors - Server now runs from `.loki/` root to properly serve queue/state JSON files
+- Updated dashboard URL to `/dashboard/index.html`
+
 ## [2.6.0] - 2025-12-28
 
 ### Added
