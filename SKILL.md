@@ -289,6 +289,627 @@ NOT: "Refactor the auth file"
 3. Re-dispatch with stricter constraints
 4. Update CONTINUITY.md with anti-pattern to avoid
 
+## Spec-Driven Development (SDD)
+
+**CRITICAL:** Specifications are the shared source of truth. Write specs BEFORE code, not after.
+
+### Philosophy: Specification as Contract
+
+Traditional approach (BAD):
+```
+Code → Tests → Documentation → API Spec (if we're lucky)
+```
+
+Spec-Driven approach (GOOD):
+```
+Spec → Tests from Spec → Code to Satisfy Spec → Validation
+```
+
+**Benefits:**
+- Spec is executable contract between frontend/backend
+- Prevents API drift and breaking changes
+- Enables parallel development (frontend mocks from spec)
+- AI agents have clear target to implement against
+- Documentation is always accurate (generated from spec)
+
+### Spec-First Workflow
+
+**Phase 1: Specification Generation (BEFORE Architecture)**
+
+1. **Parse PRD and Extract API Requirements**
+   ```bash
+   # Identify all user-facing functionality
+   # Map to API operations (CRUD, searches, workflows)
+   # Document data models and relationships
+   ```
+
+2. **Generate OpenAPI 3.1 Specification**
+   ```yaml
+   openapi: 3.1.0
+   info:
+     title: Product API
+     version: 1.0.0
+   paths:
+     /auth/login:
+       post:
+         summary: Authenticate user and return JWT
+         requestBody:
+           required: true
+           content:
+             application/json:
+               schema:
+                 type: object
+                 required: [email, password]
+                 properties:
+                   email: { type: string, format: email }
+                   password: { type: string, minLength: 8 }
+         responses:
+           200:
+             description: Success
+             content:
+               application/json:
+                 schema:
+                   type: object
+                   properties:
+                     token: { type: string }
+                     expiresAt: { type: string, format: date-time }
+           401:
+             description: Invalid credentials
+   components:
+     schemas:
+       User:
+         type: object
+         required: [id, email, createdAt]
+         properties:
+           id: { type: string, format: uuid }
+           email: { type: string, format: email }
+           name: { type: string }
+           createdAt: { type: string, format: date-time }
+   ```
+
+3. **Validate Spec**
+   ```bash
+   # Install OpenAPI tools
+   npm install -g @stoplight/spectral-cli
+
+   # Lint the spec
+   spectral lint .loki/specs/openapi.yaml
+
+   # Validate against OpenAPI 3.1 schema
+   swagger-cli validate .loki/specs/openapi.yaml
+   ```
+
+4. **Generate Artifacts from Spec**
+   ```bash
+   # Generate TypeScript types
+   npx openapi-typescript .loki/specs/openapi.yaml --output src/types/api.ts
+
+   # Generate client SDK
+   npx openapi-generator-cli generate \
+     -i .loki/specs/openapi.yaml \
+     -g typescript-axios \
+     -o src/clients/api
+
+   # Generate server stubs
+   npx openapi-generator-cli generate \
+     -i .loki/specs/openapi.yaml \
+     -g nodejs-express-server \
+     -o backend/generated
+
+   # Generate documentation
+   npx redoc-cli bundle .loki/specs/openapi.yaml -o docs/api.html
+   ```
+
+**Phase 2: Contract Testing**
+
+Implement contract tests BEFORE implementation:
+
+```typescript
+// tests/contract/auth.contract.test.ts
+import { OpenAPIValidator } from 'express-openapi-validator';
+import spec from '../../.loki/specs/openapi.yaml';
+
+describe('Auth API Contract', () => {
+  const validator = new OpenAPIValidator({ apiSpec: spec });
+
+  it('POST /auth/login validates against spec', async () => {
+    const request = {
+      method: 'POST',
+      path: '/auth/login',
+      body: { email: 'user@example.com', password: 'password123' }
+    };
+
+    const response = {
+      statusCode: 200,
+      body: {
+        token: 'eyJhbGc...',
+        expiresAt: '2025-01-03T10:00:00Z'
+      }
+    };
+
+    // Validate request/response match spec
+    await validator.validate(request, response);
+  });
+
+  it('POST /auth/login rejects invalid email', async () => {
+    const request = {
+      method: 'POST',
+      path: '/auth/login',
+      body: { email: 'not-an-email', password: 'password123' }
+    };
+
+    // Should fail validation
+    await expect(validator.validate(request, {})).rejects.toThrow();
+  });
+});
+```
+
+**Phase 3: Implementation Against Spec**
+
+Agents implement ONLY what's in the spec:
+
+```markdown
+## GOAL
+Implement /auth/login endpoint that EXACTLY matches .loki/specs/openapi.yaml specification
+
+## CONSTRAINTS
+- MUST validate all requests against openapi.yaml schema
+- MUST return responses matching spec (status codes, schemas)
+- NO additional fields not in spec
+- NO missing required fields from spec
+- Performance: <200ms p99 (as documented in spec x-performance)
+
+## VALIDATION
+Before marking complete:
+1. Run contract tests: npm run test:contract
+2. Validate implementation: spectral lint .loki/specs/openapi.yaml
+3. Test with Postman collection (auto-generated from spec)
+4. Verify documentation matches implementation
+```
+
+**Phase 4: Continuous Spec Validation**
+
+In CI/CD pipeline:
+
+```yaml
+# .github/workflows/spec-validation.yml
+name: Spec Validation
+
+on: [push, pull_request]
+
+jobs:
+  validate-spec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # Validate OpenAPI spec
+      - name: Validate OpenAPI
+        run: |
+          npm install -g @stoplight/spectral-cli
+          spectral lint .loki/specs/openapi.yaml --fail-severity warn
+
+      # Check for breaking changes
+      - name: Detect Breaking Changes
+        run: |
+          npx @openapitools/openapi-diff \
+            origin/main:.loki/specs/openapi.yaml \
+            HEAD:.loki/specs/openapi.yaml \
+            --fail-on-incompatible
+
+      # Run contract tests
+      - name: Contract Tests
+        run: npm run test:contract
+
+      # Validate implementation matches spec
+      - name: Validate Implementation
+        run: |
+          # Start server in background
+          npm start &
+          sleep 5
+
+          # Test all endpoints against spec
+          npx @schemathesis/schemathesis run \
+            .loki/specs/openapi.yaml \
+            --base-url http://localhost:3000 \
+            --checks all
+```
+
+### Spec Evolution & Versioning
+
+**When to Version:**
+- Breaking changes: increment major version (v1 → v2)
+- New endpoints/fields: increment minor version (v1.0 → v1.1)
+- Bug fixes: increment patch version (v1.0.0 → v1.0.1)
+
+**Maintaining Backwards Compatibility:**
+
+```yaml
+# Support multiple versions simultaneously
+paths:
+  /v1/auth/login:  # Old version
+    post:
+      deprecated: true
+      description: Use /v2/auth/login instead
+
+  /v2/auth/login:  # New version
+    post:
+      summary: Enhanced login with MFA support
+```
+
+**Migration Path:**
+1. Announce deprecation in spec (with sunset date)
+2. Add deprecation warnings to v1 responses
+3. Give clients 6 months to migrate
+4. Remove v1 endpoints
+
+### Spec-Driven Development Checklist
+
+For EVERY new feature:
+- [ ] PRD requirement identified
+- [ ] OpenAPI spec written/updated FIRST
+- [ ] Spec validated with Spectral
+- [ ] TypeScript types generated from spec
+- [ ] Contract tests written
+- [ ] Implementation developed against spec
+- [ ] Contract tests pass
+- [ ] Documentation auto-generated from spec
+- [ ] Breaking change analysis run
+- [ ] Postman collection updated
+
+**Store specs in:** `.loki/specs/openapi.yaml`
+
+**Spec takes precedence over:**
+- PRD (if conflict, update PRD to match agreed spec)
+- Code (if code doesn't match spec, code is wrong)
+- Documentation (docs are generated FROM spec)
+
+## Model Context Protocol (MCP) Integration
+
+**CRITICAL:** Loki Mode agents communicate using standardized MCP protocol for composability and interoperability.
+
+### MCP Architecture
+
+**What is MCP?**
+- Standardized protocol for AI agents and tools to exchange context
+- Enables modular "ingredient" composition (browser automation, knowledge systems, GitHub tools)
+- Allows multiple AI agents (Anthropic, OpenAI, Google) to collaborate on shared tasks
+
+**Loki Mode as MCP Ecosystem:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   Loki Mode Orchestrator                    │
+│                (MCP Server Coordinator)                     │
+└─────────────────────────────────────────────────────────────┘
+                           │
+        ┌──────────────────┼──────────────────┐
+        │                  │                  │
+┌───────▼────────┐  ┌──────▼───────┐  ┌──────▼───────┐
+│  MCP Server:   │  │ MCP Server:  │  │ MCP Server:  │
+│   Engineering  │  │  Operations  │  │   Business   │
+│     Swarm      │  │    Swarm     │  │    Swarm     │
+└────────────────┘  └──────────────┘  └──────────────┘
+        │                  │                  │
+    ┌───┴───┐          ┌───┴───┐          ┌───┴───┐
+    │ Agent │          │ Agent │          │ Agent │
+    │ Agent │          │ Agent │          │ Agent │
+    │ Agent │          │ Agent │          │ Agent │
+    └───────┘          └───────┘          └───────┘
+```
+
+### MCP Server Implementation
+
+Each swarm is an MCP server exposing tools and resources:
+
+```typescript
+// .loki/mcp/servers/engineering-swarm.ts
+import { McpServer } from '@modelcontextprotocol/sdk';
+
+const server = new McpServer({
+  name: 'loki-engineering-swarm',
+  version: '1.0.0',
+  description: 'Engineering swarm: frontend, backend, database, mobile, QA agents'
+});
+
+// Register tools (agent capabilities)
+server.addTool({
+  name: 'implement-feature',
+  description: 'Implement a feature from specification',
+  parameters: {
+    type: 'object',
+    properties: {
+      spec: { type: 'string', description: 'OpenAPI spec path' },
+      feature: { type: 'string', description: 'Feature to implement' },
+      goal: { type: 'string', description: 'What success looks like' },
+      constraints: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Implementation constraints'
+      }
+    },
+    required: ['spec', 'feature', 'goal']
+  },
+  handler: async (params) => {
+    // Dispatch to appropriate agent
+    const agent = selectAgent(params.feature);
+    return await agent.implement(params);
+  }
+});
+
+server.addTool({
+  name: 'review-code',
+  description: 'Run 3-stage code review (static analysis + AI reviewers)',
+  parameters: {
+    type: 'object',
+    properties: {
+      files: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Files to review'
+      },
+      spec: { type: 'string', description: 'OpenAPI spec for contract validation' }
+    },
+    required: ['files']
+  },
+  handler: async (params) => {
+    // Stage 1: Static analysis
+    const staticResults = await runStaticAnalysis(params.files);
+
+    // Stage 2: AI reviewers (parallel)
+    const aiResults = await Promise.all([
+      securityReviewer.review(params.files, staticResults),
+      architectureReviewer.review(params.files, staticResults),
+      performanceReviewer.review(params.files, staticResults)
+    ]);
+
+    return { staticResults, aiResults };
+  }
+});
+
+// Register resources (agent state, context)
+server.addResource({
+  uri: 'loki://engineering/state',
+  name: 'Engineering Swarm State',
+  description: 'Current state of engineering agents',
+  handler: async () => {
+    return await readState('.loki/state/agents/engineering-*.json');
+  }
+});
+
+server.addResource({
+  uri: 'loki://engineering/continuity',
+  name: 'Engineering Working Memory',
+  description: 'Current CONTINUITY.md for engineering context',
+  handler: async () => {
+    return await readFile('.loki/CONTINUITY.md');
+  }
+});
+
+server.listen();
+```
+
+### MCP Client (Orchestrator)
+
+The orchestrator consumes MCP servers:
+
+```typescript
+// .loki/mcp/orchestrator.ts
+import { McpClient } from '@modelcontextprotocol/sdk';
+
+class LokiOrchestrator {
+  private engineeringSwarm: McpClient;
+  private operationsSwarm: McpClient;
+  private businessSwarm: McpClient;
+
+  async init() {
+    // Connect to MCP servers
+    this.engineeringSwarm = new McpClient({
+      serverUrl: 'loki://swarms/engineering'
+    });
+
+    this.operationsSwarm = new McpClient({
+      serverUrl: 'loki://swarms/operations'
+    });
+
+    this.businessSwarm = new McpClient({
+      serverUrl: 'loki://swarms/business'
+    });
+
+    await Promise.all([
+      this.engineeringSwarm.connect(),
+      this.operationsSwarm.connect(),
+      this.businessSwarm.connect()
+    ]);
+  }
+
+  async executeTask(task) {
+    // Determine which swarm handles this task
+    const swarm = this.routeTask(task);
+
+    // Get swarm's current context
+    const context = await swarm.getResource('loki://{swarm}/continuity');
+
+    // Execute task via MCP tool
+    const result = await swarm.callTool(task.tool, {
+      ...task.params,
+      context: context.content
+    });
+
+    return result;
+  }
+
+  routeTask(task) {
+    if (task.type.startsWith('eng-')) return this.engineeringSwarm;
+    if (task.type.startsWith('ops-')) return this.operationsSwarm;
+    if (task.type.startsWith('biz-')) return this.businessSwarm;
+    throw new Error(`Unknown task type: ${task.type}`);
+  }
+}
+```
+
+### Cross-Platform MCP Integration
+
+**Register with GitHub MCP Registry:**
+
+```yaml
+# .loki/mcp/registry.yaml
+name: loki-mode
+version: 2.13.0
+description: Autonomous multi-agent system for PRD-to-production deployment
+author: asklokesh
+
+servers:
+  - name: loki-engineering-swarm
+    description: Frontend, backend, database, mobile, QA agents
+    tools:
+      - implement-feature
+      - run-tests
+      - review-code
+      - refactor-code
+    resources:
+      - loki://engineering/state
+      - loki://engineering/continuity
+      - loki://engineering/queue
+
+  - name: loki-operations-swarm
+    description: DevOps, security, monitoring, incident response agents
+    tools:
+      - deploy-application
+      - run-security-scan
+      - setup-monitoring
+      - handle-incident
+    resources:
+      - loki://operations/state
+      - loki://operations/deployments
+
+  - name: loki-business-swarm
+    description: Marketing, sales, finance, legal, support agents
+    tools:
+      - create-marketing-campaign
+      - generate-sales-materials
+      - review-legal-compliance
+    resources:
+      - loki://business/state
+
+installation:
+  npm: "@loki-mode/mcp-servers"
+  github: "asklokesh/claudeskill-loki-mode"
+
+compatibility:
+  - anthropic-claude
+  - openai-gpt
+  - google-gemini
+```
+
+**External MCP Servers Loki Can Use:**
+
+```typescript
+// .loki/mcp/external-integrations.ts
+
+// GitHub MCP Server
+const githubMcp = new McpClient({ serverUrl: 'github://mcp' });
+await githubMcp.callTool('create-pull-request', {
+  repo: 'user/repo',
+  title: task.title,
+  body: task.decisionReport,
+  files: task.filesModified
+});
+
+// Browser Automation (Playwright MCP)
+const browserMcp = new McpClient({ serverUrl: 'playwright://mcp' });
+await browserMcp.callTool('run-e2e-test', {
+  spec: '.loki/specs/e2e-tests.yaml',
+  baseUrl: 'http://localhost:3000'
+});
+
+// Notion Knowledge Base MCP
+const notionMcp = new McpClient({ serverUrl: 'notion://mcp' });
+await notionMcp.callTool('create-page', {
+  database: 'Engineering Docs',
+  title: 'API Specification v2.0',
+  content: generatedSpec
+});
+```
+
+### MCP Benefits for Loki Mode
+
+1. **Composability**: Mix and match agents from different sources
+2. **Interoperability**: Work with GitHub Copilot, other AI assistants
+3. **Modularity**: Each swarm is independent, replaceable
+4. **Discoverability**: Listed in GitHub MCP Registry
+5. **Reusability**: Other teams can use Loki agents standalone
+
+### MCP Directory Structure
+
+```
+.loki/mcp/
+├── servers/                    # MCP server implementations
+│   ├── engineering-swarm.ts
+│   ├── operations-swarm.ts
+│   ├── business-swarm.ts
+│   ├── data-swarm.ts
+│   └── growth-swarm.ts
+├── orchestrator.ts             # MCP client coordinator
+├── registry.yaml               # GitHub MCP Registry manifest
+└── external-integrations.ts    # Third-party MCP servers
+```
+
+### MCP Development Workflow
+
+**1. Agent as MCP Tool**
+
+Instead of internal-only agents, expose as MCP tools:
+
+```typescript
+// Old way (internal only)
+function implementFeature(params) { ... }
+
+// New way (MCP-exposed, reusable)
+server.addTool({
+  name: 'implement-feature',
+  description: 'Implement feature from OpenAPI spec',
+  parameters: mcpSchema,
+  handler: implementFeature
+});
+```
+
+**2. State as MCP Resources**
+
+Expose state for external consumption:
+
+```typescript
+server.addResource({
+  uri: 'loki://state/orchestrator',
+  name: 'Orchestrator State',
+  handler: () => readJSON('.loki/state/orchestrator.json')
+});
+```
+
+**3. Cross-Agent Collaboration**
+
+Different AI providers can work on same project:
+
+```typescript
+// Claude implements backend
+await claudeAgent.callTool('loki://engineering/implement-feature', {
+  spec: 'openapi.yaml',
+  feature: 'auth'
+});
+
+// GPT-4 reviews frontend
+await gpt4Agent.callTool('loki://engineering/review-code', {
+  files: ['src/components/*'],
+  focus: 'accessibility'
+});
+
+// Gemini handles documentation
+await geminiAgent.callTool('loki://business/generate-docs', {
+  spec: 'openapi.yaml',
+  format: 'markdown'
+});
+```
+
 ### Perpetual Improvement Loop
 
 **A product is NEVER truly complete.** There are always:
@@ -1306,6 +1927,21 @@ done
 ```
 .loki/
 ├── CONTINUITY.md                # Working memory (read/update every turn)
+├── specs/                       # Spec-Driven Development
+│   ├── openapi.yaml             # OpenAPI 3.1 specification (source of truth)
+│   ├── graphql.schema           # GraphQL schema (if applicable)
+│   ├── asyncapi.yaml            # AsyncAPI for events/websockets
+│   └── postman-collection.json  # Auto-generated from OpenAPI
+├── mcp/                         # Model Context Protocol
+│   ├── servers/                 # MCP server implementations
+│   │   ├── engineering-swarm.ts
+│   │   ├── operations-swarm.ts
+│   │   ├── business-swarm.ts
+│   │   ├── data-swarm.ts
+│   │   └── growth-swarm.ts
+│   ├── orchestrator.ts          # MCP client coordinator
+│   ├── registry.yaml            # GitHub MCP Registry manifest
+│   └── external-integrations.ts # Third-party MCP servers
 ├── state/
 │   ├── orchestrator.json       # Master state
 │   ├── agents/                  # Per-agent state files
@@ -1324,7 +1960,8 @@ done
 ├── logs/
 │   ├── LOKI-LOG.md             # Master audit log
 │   ├── agents/                  # Per-agent logs
-│   ├── decisions/               # Decision audit trail
+│   ├── decisions/               # Decision audit trail (Why/What/Trade-offs)
+│   ├── static-analysis/         # Static analysis results
 │   └── archive/                 # Rotated logs (daily)
 ├── config/
 │   ├── agents.yaml              # Agent pool configuration
@@ -1362,7 +1999,7 @@ set -euo pipefail
 LOKI_ROOT=".loki"
 
 # Create directory structure
-mkdir -p "$LOKI_ROOT"/{state/{agents,checkpoints,locks},queue,messages/{inbox,outbox,broadcast},logs/{agents,decisions,archive},config,prompts,artifacts/{releases,reports,metrics,backups},scripts}
+mkdir -p "$LOKI_ROOT"/{specs,mcp/servers,state/{agents,checkpoints,locks},queue,messages/{inbox,outbox,broadcast},logs/{agents,decisions,archive,static-analysis},config,prompts,artifacts/{releases,reports,metrics,backups},scripts}
 
 # Initialize queue files
 for f in pending in-progress completed failed dead-letter; do
@@ -1991,11 +2628,43 @@ def cancel_task(task_id, reason):
 5. Generate task backlog with priorities and dependencies
 
 ### Phase 2: Architecture
-1. Spawn `eng-backend` + `eng-frontend` architects
-2. Select tech stack via consensus (both agents must agree)
-3. Self-reflection checkpoint with evidence
-4. Generate infrastructure requirements
-5. Create project scaffolding
+**SPEC-FIRST WORKFLOW** - Generate OpenAPI spec BEFORE code:
+
+1. **Extract API Requirements from PRD**
+   - Parse PRD for user stories and functionality
+   - Map to REST/GraphQL operations
+   - Document data models and relationships
+
+2. **Generate OpenAPI 3.1 Specification**
+   - Create `.loki/specs/openapi.yaml` with all endpoints
+   - Define request/response schemas
+   - Document error codes and validation rules
+   - Add performance requirements (x-performance extension)
+   - Validate spec with Spectral
+
+3. **Generate Artifacts from Spec**
+   - TypeScript types: `npx openapi-typescript .loki/specs/openapi.yaml --output src/types/api.ts`
+   - Client SDK for frontend
+   - Server stubs for backend
+   - API documentation (ReDoc/Swagger UI)
+
+4. **Select Tech Stack** (via consensus)
+   - Spawn `eng-backend` + `eng-frontend` architects
+   - Both agents review spec and propose stack
+   - Consensus required (both must agree)
+   - Self-reflection checkpoint with evidence
+
+5. **Generate Infrastructure Requirements**
+   - Based on spec and tech stack
+   - Database schema from data models
+   - Caching strategy from performance requirements
+   - Scaling requirements from load estimates
+
+6. **Create Project Scaffolding**
+   - Initialize project with tech stack
+   - Install dependencies
+   - Configure linters based on spec validation rules
+   - Setup contract testing framework
 
 ### Phase 3: Infrastructure
 1. Spawn `ops-devops` agent

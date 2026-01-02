@@ -5,6 +5,106 @@ All notable changes to Loki Mode will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.0] - 2026-01-02
+
+### Added
+- **Spec-Driven Development (SDD)** - Specifications as source of truth BEFORE code:
+
+  **Philosophy**: `Spec → Tests from Spec → Code to Satisfy Spec → Validation`
+
+  - OpenAPI 3.1 specifications written FIRST (before architecture/code)
+  - Spec is executable contract between frontend/backend
+  - Prevents API drift and breaking changes
+  - Enables parallel development (frontend mocks from spec)
+  - Documentation auto-generated from spec (always accurate)
+
+  **Workflow**:
+  1. Parse PRD and extract API requirements
+  2. Generate OpenAPI spec with all endpoints, schemas, error codes
+  3. Validate spec with Spectral linter
+  4. Generate TypeScript types, client SDK, server stubs, docs
+  5. Implement contract tests BEFORE implementation
+  6. Code implements ONLY what's in spec
+  7. CI/CD validates implementation against spec
+
+  **Spec Storage**: `.loki/specs/openapi.yaml`
+
+  **Spec Precedence**: Spec > PRD, Spec > Code, Spec > Documentation
+
+- **Model Context Protocol (MCP) Integration** - Standardized agent communication:
+
+  **Architecture**:
+  - Each swarm is an MCP server (engineering, operations, business, data, growth)
+  - Orchestrator is MCP client consuming swarm servers
+  - Standardized tool/resource exchange protocol
+  - Composable, interoperable agents
+
+  **Benefits**:
+  1. **Composability**: Mix agents from different sources
+  2. **Interoperability**: Work with GitHub Copilot, other AI assistants
+  3. **Modularity**: Each swarm is independent, replaceable
+  4. **Discoverability**: Listed in GitHub MCP Registry
+  5. **Reusability**: Other teams can use Loki agents standalone
+
+  **MCP Servers Implemented**:
+  - `loki-engineering-swarm`: Frontend, backend, database, QA agents
+    - Tools: implement-feature, run-tests, review-code, refactor-code
+    - Resources: loki://engineering/state, loki://engineering/continuity
+  - `loki-operations-swarm`: DevOps, security, monitoring agents
+    - Tools: deploy-application, run-security-scan, setup-monitoring
+  - `loki-business-swarm`: Marketing, sales, legal agents
+    - Tools: create-marketing-campaign, generate-sales-materials
+
+  **External MCP Integration**:
+  - GitHub MCP (create PRs, manage issues)
+  - Playwright MCP (browser automation, E2E tests)
+  - Notion MCP (knowledge base, documentation)
+
+  **MCP Directory**: `.loki/mcp/` with servers/, orchestrator.ts, registry.yaml
+
+- **Spec Evolution & Versioning**:
+  - Semver for API versions (breaking → major, new endpoints → minor, fixes → patch)
+  - Backwards compatibility via multiple version support (/v1, /v2)
+  - Breaking change detection in CI/CD
+  - 6-month deprecation migration path
+
+- **Contract Testing**:
+  - Tests written from spec BEFORE implementation
+  - Request/response validation against OpenAPI schema
+  - Auto-generated Postman collections
+  - Schemathesis integration for fuzz testing
+
+### Changed
+- **Phase 2: Architecture** - Now SPEC-FIRST:
+  1. Extract API requirements from PRD
+  2. Generate OpenAPI 3.1 specification (BEFORE code)
+  3. Generate artifacts from spec (types, SDK, stubs, docs)
+  4. Select tech stack (based on spec requirements)
+  5. Generate infrastructure requirements (from spec)
+  6. Create project scaffolding (with contract testing)
+
+- **Directory Structure** - Added new directories:
+  - `.loki/specs/` - OpenAPI, GraphQL, AsyncAPI specifications
+  - `.loki/mcp/` - MCP server implementations and registry
+  - `.loki/logs/static-analysis/` - Static analysis results
+
+- **Bootstrap Script** - Creates specs/ and mcp/ directories
+
+### Philosophy
+**"Be the best"** - Integrating top approaches from 2025:
+
+1. **Agentic AI**: Autonomous agents that iterate, recognize errors, fix mistakes in real-time
+2. **MCP**: Standardized agent communication for composability across platforms
+3. **Spec-Driven Development**: Specifications as executable contracts, not afterthoughts
+
+Loki Mode now combines the best practices from GitHub's ecosystem:
+- **Speed**: Autonomous multi-agent development
+- **Control**: Static analysis + AI review + spec validation
+- **Interoperability**: MCP-compatible agents work with any AI platform
+- **Quality**: Spec-first prevents drift, contract tests ensure compliance
+
+"Specifications are the shared source of truth" - enabling parallel development, preventing API drift, and ensuring documentation accuracy.
+
 ## [2.12.0] - 2026-01-02
 
 ### Added
