@@ -5,6 +5,107 @@ description: Multi-agent autonomous startup system for Claude Code. Triggers on 
 
 # Loki Mode - Multi-Agent Autonomous Startup System
 
+> **Version 2.15.0** | PRD → Production | Zero Human Intervention
+
+---
+
+## ⚡ Quick Reference
+
+### Critical First Steps (Every Turn)
+1. **READ** `.loki/CONTINUITY.md` - Your working memory
+2. **CHECK** `.loki/state/orchestrator.json` - Current phase/metrics
+3. **REVIEW** `.loki/queue/pending.json` - Next tasks
+4. **FOLLOW** RAR cycle: REASON → ACT → REFLECT
+
+### Key Files (Priority Order)
+| File | Purpose | Update When |
+|------|---------|-------------|
+| `.loki/CONTINUITY.md` | Working memory - what am I doing NOW? | Every turn |
+| `.loki/specs/openapi.yaml` | API spec - source of truth | Architecture changes |
+| `CLAUDE.md` | Project context - arch & patterns | Significant changes |
+| `.loki/queue/*.json` | Task states | Every task change |
+
+### Decision Tree: What To Do Next?
+
+```
+START
+  │
+  ├─ Read CONTINUITY.md ─────────────────┐
+  │                                       │
+  ├─ Task in-progress?                    │
+  │  ├─ YES → Resume                      │
+  │  └─ NO → Check pending queue          │
+  │                                       │
+  ├─ Pending tasks?                       │
+  │  ├─ YES → Claim highest priority      │
+  │  └─ NO → Check phase completion       │
+  │                                       │
+  ├─ Phase done?                          │
+  │  ├─ YES → Advance to next phase       │
+  │  └─ NO → Generate tasks for phase     │
+  │                                       │
+LOOP ←─────────────────────────────────────┘
+```
+
+### SDLC Phase Flow (High-Level)
+
+```
+Bootstrap → Discovery → Architecture → Infrastructure
+     ↓           ↓            ↓              ↓
+  (Setup)   (Analyze PRD)  (Design)    (Cloud/DB Setup)
+                                              ↓
+Development ← QA ← Deployment ← Business Ops ← Growth Loop
+     ↓         ↓         ↓            ↓            ↓
+ (Build)   (Test)   (Release)    (Monitor)    (Iterate)
+```
+
+### Essential Patterns
+
+**Spec-First:** `OpenAPI → Tests → Code → Validate`
+
+**Code Review:** `Static Analysis (BLOCK) → 3 AI Reviewers → Merge`
+
+**Quality Gates:** `Pre-Hook (BLOCK) → Write → Post-Hook (FIX)`
+
+**Problem Solving:** `Analyze → Plan (NO CODE) → Implement`
+
+**Memory Hierarchy:**
+1. CONTINUITY.md (every turn)
+2. CLAUDE.md (significant changes)
+3. Ledgers (checkpoints)
+4. Rules (permanent patterns)
+
+### Common Issues & Solutions
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| **Agent stuck/no progress** | Lost context, forgot CONTINUITY.md | Read `.loki/CONTINUITY.md` first thing every turn |
+| **Task already done, repeating** | Not checking queue state | Check `.loki/queue/*.json` before claiming tasks |
+| **Code review failing** | Skipped static analysis | Run static analysis BEFORE AI reviewers (lines 2639-2647) |
+| **Breaking API changes** | Code before spec | Follow Spec-First workflow (lines 368-641) |
+| **Rate limit hit** | Too many parallel agents | Check circuit breakers, use exponential backoff (lines 3578-3616) |
+| **Tests failing after merge** | Skipped quality gates | Never bypass Severity-Based Blocking (lines 221-223) |
+| **Can't find what to do** | Not following decision tree | Use Decision Tree above, check phase in orchestrator.json |
+| **Memory/context growing** | Not using ledgers | Write to ledgers after completing tasks (lines 1649-1675) |
+
+---
+
+## 📋 Table of Contents
+
+**Core System**
+- [Prerequisites](#prerequisites) | [Autonomous Execution](#critical-fully-autonomous-execution-ralph-wiggum-mode) | [RAR Cycle](#reason-act-reflect-rar-cycle)
+
+**Quality & Development**
+- [Quality Control](#quality-control-principles) | [Spec-Driven Dev](#spec-driven-development-sdd) | [MCP](#model-context-protocol-mcp-integration) | [Claude Best Practices](#claude-code-best-practices)
+
+**Architecture**
+- [Agent Types](#agent-types) | [Directory Structure](#directory-structure) | [SDLC Phases](#sdlc-phases-overview)
+
+**Advanced**
+- [Task Queue](#distributed-task-queue) | [Circuit Breakers](#circuit-breakers) | [Memory](#memory-directory-structure) | [Deployment](#deployment)
+
+---
+
 ## Prerequisites
 
 ```bash
@@ -142,10 +243,9 @@ architecture decisions, patterns being followed, etc.]
    - Architecture reviewer (opus)
    - Performance reviewer (sonnet)
 
-3. **Severity-Based Blocking**
-   - Critical/High/Medium → MUST FIX before proceeding
-   - Low → Add TODO comment, continue
-   - Cosmetic → Add FIXME comment, continue
+3. **Severity-Based Blocking** (See detailed table at lines 2639-2647)
+   - Critical/High/Medium → BLOCK and fix before proceeding
+   - Low/Cosmetic → Add TODO/FIXME comment, continue
 
 4. **Test Coverage Gates**
    - Unit tests: 100% pass, >80% coverage
@@ -1652,33 +1752,15 @@ const hashPassword = async (password: string): Promise<string> => {
     - [ ] API documentation update in docs/api/auth.md
     - [ ] Performance benchmark showing <200ms p99
 
-    ## WHEN COMPLETE - Report with Why/What/Trade-offs
+    ## WHEN COMPLETE
+    **See Task Completion Report Template (lines 298-341) for full decision documentation format.**
 
-    ### WHY (Problem & Solution Rationale)
-    - Problem: [what was broken/missing]
-    - Root cause: [why]
-    - Solution chosen: [what you implemented]
-    - Alternatives considered: [what else you evaluated]
-
-    ### WHAT (Changes Made)
-    - Files modified: [with line ranges]
-    - APIs changed: [endpoints, schemas]
-    - Behavior changes: [what users notice]
-    - Dependencies added/removed: [with justification]
-
-    ### TRADE-OFFS (Gains & Costs)
-    - Gained: [benefits]
-    - Cost: [downsides]
-    - Neutral: [no change]
-
-    ### RISKS & MITIGATIONS
-    - Risk: [what could go wrong]
-      - Mitigation: [how you address it]
-
-    ### TEST RESULTS
-    - Unit: X/X passed (coverage: Y%)
-    - Integration: X/X passed
-    - Performance: [benchmark results]
+    Report must include:
+    1. WHY: Problem & Solution Rationale
+    2. WHAT: Changes Made (files, APIs, behavior)
+    3. TRADE-OFFS: Gains & Costs
+    4. RISKS & MITIGATIONS
+    5. TEST RESULTS
 
     ## POST-COMPLETION TASKS
     1. Update ledger at .loki/memory/ledgers/LEDGER-{your-id}.md
@@ -2357,6 +2439,7 @@ for f in pending in-progress completed failed dead-letter; do
 done
 
 # Initialize CONTINUITY.md (working memory)
+# See CONTINUITY.md template at lines 152-190 for full structure
 cat > "$LOKI_ROOT/CONTINUITY.md" << 'EOF'
 # Loki Mode Working Memory
 Last Updated: BOOTSTRAP

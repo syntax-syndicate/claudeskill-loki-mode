@@ -5,6 +5,32 @@ All notable changes to Loki Mode will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.0] - 2026-01-02
+
+### Added
+- **Enhanced Quick Reference Section** - Immediate orientation for every turn:
+  - Critical First Steps checklist (4-step workflow)
+  - Key Files priority table with update frequency
+  - Decision Tree flowchart for "What To Do Next?"
+  - SDLC Phase Flow diagram (high-level overview)
+  - Essential Patterns (one-line quick reference)
+  - Common Issues & Solutions troubleshooting table
+
+### Changed
+- **Consolidated Redundant Templates** - Improved maintainability:
+  - CONTINUITY.md template: Single canonical version (lines 152-190), referenced in bootstrap
+  - Task Completion Report: Single canonical template (lines 298-341), all duplicates now reference it
+  - Severity-Based Blocking: Detailed table (lines 2639-2647), simplified version references it
+- **Improved Navigation** - Better file organization:
+  - Added comprehensive Table of Contents with categorized sections
+  - Cross-references between related sections
+  - Line number references for quick jumps
+
+### Fixed
+- Removed duplicate CONTINUITY.md template from bootstrap script (was lines 2436-2470)
+- Removed duplicate Task Completion Report from subagent dispatch section (was lines 1731-1764)
+- Consolidated severity matrices (removed duplicates, kept one authoritative version)
+
 ## [2.14.0] - 2026-01-02
 
 ### Added
