@@ -5,6 +5,42 @@ All notable changes to Loki Mode will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.5] - 2026-01-04
+
+### Added
+- **System Resource Monitoring** - Prevents computer overload from too many parallel agents (run.sh:786-899):
+  - **Background Resource Monitor** checks CPU and memory usage every 5 minutes (configurable)
+  - **Automatic Warnings** logged when CPU or memory exceeds thresholds (default: 80%)
+  - **Resources JSON File** (`.loki/state/resources.json`) contains real-time resource status
+  - **RARV Integration** - Claude checks resources.json during REASON step and throttles agents if needed
+  - **macOS & Linux Support** - Platform-specific CPU/memory detection using `top`, `vm_stat`, `free`
+  - **Configurable Thresholds** via environment variables:
+    - `LOKI_RESOURCE_CHECK_INTERVAL` (default: 300 seconds = 5 minutes)
+    - `LOKI_RESOURCE_CPU_THRESHOLD` (default: 80%)
+    - `LOKI_RESOURCE_MEM_THRESHOLD` (default: 80%)
+
+### Changed
+- **RARV Cycle** - Updated REASON step to check `.loki/state/resources.json` for warnings (run.sh:1194)
+  - If CPU or memory is high, Claude will reduce parallel agent spawning or pause non-critical tasks
+  - Prevents system from becoming unusable due to too many agents
+- **Cleanup Handlers** - `stop_status_monitor()` now also stops resource monitor (run.sh:335)
+
+### Why This Matters
+**User Problem:** "Loki Mode spinning agents made my computer unusable and I had to hard restart"
+**Solution:** Resource monitoring prevents this by:
+1. Continuously tracking CPU and memory usage every 5 minutes
+2. Warning when thresholds are exceeded
+3. Allowing Claude to self-throttle by reducing agent count
+4. User can configure thresholds based on their hardware
+
+### Impact
+- **Prevents System Overload:** No more hard restarts due to too many parallel agents
+- **Self-Regulating:** Claude automatically reduces agent spawning when resources are constrained
+- **Transparent:** Resource status visible in `.loki/state/resources.json`
+- **Configurable:** Users can set custom thresholds for their hardware
+- **Cross-Platform:** Works on macOS and Linux
+- **User Request:** Directly addresses "add capability to check cpu and memory every few mins and let claude take decision on it"
+
 ## [2.18.4] - 2026-01-04
 
 ### Changed

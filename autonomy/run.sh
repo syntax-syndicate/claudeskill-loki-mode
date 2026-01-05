@@ -16,6 +16,11 @@
 #   LOKI_DASHBOARD      - Enable web dashboard (default: true)
 #   LOKI_DASHBOARD_PORT - Dashboard port (default: 57374)
 #
+# Resource Monitoring (prevents system overload):
+#   LOKI_RESOURCE_CHECK_INTERVAL - Check resources every N seconds (default: 300 = 5min)
+#   LOKI_RESOURCE_CPU_THRESHOLD  - CPU % threshold to warn (default: 80)
+#   LOKI_RESOURCE_MEM_THRESHOLD  - Memory % threshold to warn (default: 80)
+#
 # SDLC Phase Controls (all enabled by default, set to 'false' to skip):
 #   LOKI_PHASE_UNIT_TESTS      - Run unit tests (default: true)
 #   LOKI_PHASE_API_TESTS       - Functional API testing (default: true)
@@ -50,8 +55,12 @@ MAX_WAIT=${LOKI_MAX_WAIT:-3600}
 SKIP_PREREQS=${LOKI_SKIP_PREREQS:-false}
 ENABLE_DASHBOARD=${LOKI_DASHBOARD:-true}
 DASHBOARD_PORT=${LOKI_DASHBOARD_PORT:-57374}
+RESOURCE_CHECK_INTERVAL=${LOKI_RESOURCE_CHECK_INTERVAL:-300}  # Check every 5 minutes
+RESOURCE_CPU_THRESHOLD=${LOKI_RESOURCE_CPU_THRESHOLD:-80}     # CPU % threshold
+RESOURCE_MEM_THRESHOLD=${LOKI_RESOURCE_MEM_THRESHOLD:-80}     # Memory % threshold
 STATUS_MONITOR_PID=""
 DASHBOARD_PID=""
+RESOURCE_MONITOR_PID=""
 
 # SDLC Phase Controls (all enabled by default)
 PHASE_UNIT_TESTS=${LOKI_PHASE_UNIT_TESTS:-true}
@@ -323,6 +332,7 @@ stop_status_monitor() {
         kill "$STATUS_MONITOR_PID" 2>/dev/null || true
         wait "$STATUS_MONITOR_PID" 2>/dev/null || true
     fi
+    stop_resource_monitor
 }
 
 #===============================================================================
@@ -774,6 +784,121 @@ update_agents_state() {
     echo "$agents_json" > "$output_file"
 }
 
+#===============================================================================
+# Resource Monitoring
+#===============================================================================
+
+check_system_resources() {
+    # Check CPU and memory usage and write status to .loki/state/resources.json
+    local output_file=".loki/state/resources.json"
+
+    # Get CPU usage (average across all cores)
+    local cpu_usage=0
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS: use top to get CPU idle, then calculate usage
+        cpu_usage=$(top -l 2 -n 0 -stats pid,cpu | tail -n +13 | awk '{sum+=$2} END {print int(sum)}')
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        # Linux: use top or mpstat
+        cpu_usage=$(top -bn2 | grep "Cpu(s)" | tail -1 | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print int(100 - $1)}')
+    else
+        cpu_usage=0
+    fi
+
+    # Get memory usage
+    local mem_usage=0
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS: use vm_stat
+        local page_size=$(pagesize)
+        local vm_stat=$(vm_stat)
+        local pages_free=$(echo "$vm_stat" | awk '/Pages free/ {print $3}' | tr -d '.')
+        local pages_active=$(echo "$vm_stat" | awk '/Pages active/ {print $3}' | tr -d '.')
+        local pages_inactive=$(echo "$vm_stat" | awk '/Pages inactive/ {print $3}' | tr -d '.')
+        local pages_speculative=$(echo "$vm_stat" | awk '/Pages speculative/ {print $3}' | tr -d '.')
+        local pages_wired=$(echo "$vm_stat" | awk '/Pages wired down/ {print $4}' | tr -d '.')
+
+        local total_pages=$((pages_free + pages_active + pages_inactive + pages_speculative + pages_wired))
+        local used_pages=$((pages_active + pages_wired))
+        mem_usage=$((used_pages * 100 / total_pages))
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        # Linux: use free
+        mem_usage=$(free | grep Mem | awk '{print int($3/$2 * 100)}')
+    else
+        mem_usage=0
+    fi
+
+    # Determine status
+    local cpu_status="ok"
+    local mem_status="ok"
+    local overall_status="ok"
+    local warning_message=""
+
+    if [ "$cpu_usage" -ge "$RESOURCE_CPU_THRESHOLD" ]; then
+        cpu_status="high"
+        overall_status="warning"
+        warning_message="CPU usage is ${cpu_usage}% (threshold: ${RESOURCE_CPU_THRESHOLD}%). Consider reducing parallel agent count or pausing non-critical tasks."
+    fi
+
+    if [ "$mem_usage" -ge "$RESOURCE_MEM_THRESHOLD" ]; then
+        mem_status="high"
+        overall_status="warning"
+        if [ -n "$warning_message" ]; then
+            warning_message="${warning_message} Memory usage is ${mem_usage}% (threshold: ${RESOURCE_MEM_THRESHOLD}%)."
+        else
+            warning_message="Memory usage is ${mem_usage}% (threshold: ${RESOURCE_MEM_THRESHOLD}%). Consider reducing parallel agent count or cleaning up resources."
+        fi
+    fi
+
+    # Write JSON status
+    cat > "$output_file" << EOF
+{
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "cpu": {
+    "usage_percent": $cpu_usage,
+    "threshold_percent": $RESOURCE_CPU_THRESHOLD,
+    "status": "$cpu_status"
+  },
+  "memory": {
+    "usage_percent": $mem_usage,
+    "threshold_percent": $RESOURCE_MEM_THRESHOLD,
+    "status": "$mem_status"
+  },
+  "overall_status": "$overall_status",
+  "warning_message": "$warning_message"
+}
+EOF
+
+    # Log warning if resources are high
+    if [ "$overall_status" = "warning" ]; then
+        log_warning "RESOURCE WARNING: $warning_message"
+    fi
+}
+
+start_resource_monitor() {
+    log_step "Starting resource monitor (checks every ${RESOURCE_CHECK_INTERVAL}s)..."
+
+    # Initial check
+    check_system_resources
+
+    # Background monitoring loop
+    (
+        while true; do
+            sleep "$RESOURCE_CHECK_INTERVAL"
+            check_system_resources
+        done
+    ) &
+    RESOURCE_MONITOR_PID=$!
+
+    log_info "Resource monitor started (CPU threshold: ${RESOURCE_CPU_THRESHOLD}%, Memory threshold: ${RESOURCE_MEM_THRESHOLD}%)"
+    log_info "Check status: ${CYAN}cat .loki/state/resources.json${NC}"
+}
+
+stop_resource_monitor() {
+    if [ -n "$RESOURCE_MONITOR_PID" ]; then
+        kill "$RESOURCE_MONITOR_PID" 2>/dev/null || true
+        wait "$RESOURCE_MONITOR_PID" 2>/dev/null || true
+    fi
+}
+
 start_dashboard() {
     log_header "Starting Loki Dashboard"
 
@@ -1066,7 +1191,7 @@ build_prompt() {
     phases="${phases%,}"  # Remove trailing comma
 
     # Ralph Wiggum Mode - Reason-Act-Reflect-VERIFY cycle with self-verification loop (Boris Cherny pattern)
-    local rarv_instruction="RALPH WIGGUM MODE ACTIVE. Use Reason-Act-Reflect-VERIFY cycle: 1) REASON - READ .loki/CONTINUITY.md including 'Mistakes & Learnings' section to avoid past errors. Check .loki/state/ and .loki/queue/, identify next task. If queue empty, find new improvements. 2) ACT - Execute task, write code, commit changes atomically (git checkpoint). 3) REFLECT - Update .loki/CONTINUITY.md with progress, update state, identify NEXT improvement. 4) VERIFY - Run automated tests (unit, integration, E2E), check compilation/build, verify against spec. IF VERIFICATION FAILS: a) Capture error details (stack trace, logs), b) Analyze root cause, c) UPDATE 'Mistakes & Learnings' in CONTINUITY.md with what failed, why, and how to prevent, d) Rollback to last good git checkpoint if needed, e) Apply learning and RETRY from REASON. If verification passes, mark task complete and continue. This self-verification loop achieves 2-3x quality improvement. CRITICAL: There is NEVER a 'finished' state - always find the next improvement, optimization, test, or feature."
+    local rarv_instruction="RALPH WIGGUM MODE ACTIVE. Use Reason-Act-Reflect-VERIFY cycle: 1) REASON - READ .loki/CONTINUITY.md including 'Mistakes & Learnings' section to avoid past errors. Check .loki/state/ and .loki/queue/, identify next task. CHECK .loki/state/resources.json for system resource warnings - if CPU or memory is high, reduce parallel agent spawning or pause non-critical tasks. If queue empty, find new improvements. 2) ACT - Execute task, write code, commit changes atomically (git checkpoint). 3) REFLECT - Update .loki/CONTINUITY.md with progress, update state, identify NEXT improvement. 4) VERIFY - Run automated tests (unit, integration, E2E), check compilation/build, verify against spec. IF VERIFICATION FAILS: a) Capture error details (stack trace, logs), b) Analyze root cause, c) UPDATE 'Mistakes & Learnings' in CONTINUITY.md with what failed, why, and how to prevent, d) Rollback to last good git checkpoint if needed, e) Apply learning and RETRY from REASON. If verification passes, mark task complete and continue. This self-verification loop achieves 2-3x quality improvement. CRITICAL: There is NEVER a 'finished' state - always find the next improvement, optimization, test, or feature."
 
     # Completion promise instruction (only if set)
     local completion_instruction=""
@@ -1426,6 +1551,9 @@ main() {
 
     # Start status monitor (background updates to .loki/STATUS.txt)
     start_status_monitor
+
+    # Start resource monitor (background CPU/memory checks)
+    start_resource_monitor
 
     # Run autonomous loop
     local result=0
