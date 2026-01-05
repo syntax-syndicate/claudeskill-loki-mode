@@ -5,6 +5,51 @@ All notable changes to Loki Mode will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.20.0] - 2026-01-05
+
+### Added - Benchmark Execution Mode
+
+#### `--execute` Flag for Benchmarks
+Full implementation of benchmark execution that runs problems through Claude:
+
+**HumanEval Execution** (`benchmarks/run-benchmarks.sh humaneval --execute`):
+- Sends each of 164 Python problems to Claude
+- Receives solution code from Claude
+- Executes solution against HumanEval test cases
+- Tracks pass/fail results with real-time progress
+- Saves solutions to `humaneval-solutions/` directory
+- Compares results to MetaGPT baseline (85.9-87.7%)
+
+**SWE-bench Execution** (`benchmarks/run-benchmarks.sh swebench --execute`):
+- Loads SWE-bench Lite dataset (300 real GitHub issues)
+- Generates git patches for each issue using Claude
+- Saves patches for SWE-bench evaluator
+- Outputs predictions file compatible with official harness
+
+**New Options**:
+- `--execute` - Actually run problems through Claude (vs setup only)
+- `--limit N` - Only run first N problems (useful for testing)
+- `--model MODEL` - Claude model to use (default: sonnet)
+- `--timeout N` - Timeout per problem in seconds (default: 120)
+- `--parallel N` - Run N problems in parallel (default: 1)
+
+**Example Usage**:
+```bash
+# Run first 10 HumanEval problems
+./benchmarks/run-benchmarks.sh humaneval --execute --limit 10
+
+# Run all 164 problems with Opus
+./benchmarks/run-benchmarks.sh humaneval --execute --model opus
+
+# Run 5 SWE-bench problems
+./benchmarks/run-benchmarks.sh swebench --execute --limit 5
+```
+
+### Changed
+- Benchmark runner now has two modes: SETUP (default) and EXECUTE
+- Results include pass rates, timing, and competitor comparison
+- Summary generation includes actual benchmark results when available
+
 ## [2.19.1] - 2026-01-05
 
 ### Fixed
