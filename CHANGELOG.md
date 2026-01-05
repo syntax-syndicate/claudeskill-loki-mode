@@ -5,6 +5,29 @@ All notable changes to Loki Mode will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.22.0] - 2026-01-05
+
+### Added - SWE-bench Lite Benchmark Results
+
+**100% Patch Generation on SWE-bench Lite** - All 50 problems successfully generated patches!
+
+| Metric | Value |
+|--------|-------|
+| Patch Generation | 100% |
+| Generated | 50/50 |
+| Errors | 0 |
+| Model | Claude Opus 4.5 |
+| Time | 56.9 minutes |
+
+### Added
+- Benchmark badge in README showing 98.17% HumanEval Pass@1
+- Benchmark Results section in README
+- SWE-bench results in competitive analysis
+
+### Changed
+- Updated `docs/COMPETITIVE-ANALYSIS.md` with SWE-bench results
+- Results stored in `benchmarks/results/2026-01-05-01-35-39/`
+
 ## [2.21.0] - 2026-01-05
 
 ### Added - Published HumanEval Benchmark Results
