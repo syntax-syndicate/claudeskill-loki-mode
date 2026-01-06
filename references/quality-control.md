@@ -1,12 +1,15 @@
 # Quality Control Reference
 
 Quality gates, code review process, and severity blocking rules.
+Enhanced with 2025 research on anti-sycophancy and heterogeneous teams.
 
 ---
 
 ## Core Principle: Guardrails, Not Just Acceleration
 
 **CRITICAL:** Speed without quality controls creates "AI slop" - semi-functional code that accumulates technical debt. Loki Mode enforces strict quality guardrails.
+
+**Research Insight:** Heterogeneous review teams outperform homogeneous ones by 4-6% (A-HMAD, 2025).
 
 ---
 
@@ -26,7 +29,7 @@ Quality gates, code review process, and severity blocking rules.
 Every code change goes through 3 specialized reviewers **simultaneously**:
 
 ```
-IMPLEMENT -> REVIEW (parallel) -> AGGREGATE -> FIX -> RE-REVIEW -> COMPLETE
+IMPLEMENT -> BLIND REVIEW (parallel) -> DEBATE (if disagreement) -> AGGREGATE -> FIX -> RE-REVIEW
                 |
                 +-- code-reviewer (Opus) - Code quality, patterns, best practices
                 +-- business-logic-reviewer (Opus) - Requirements, edge cases, UX
@@ -36,8 +39,62 @@ IMPLEMENT -> REVIEW (parallel) -> AGGREGATE -> FIX -> RE-REVIEW -> COMPLETE
 **Important:**
 - ALWAYS launch all 3 reviewers in a single message (3 Task calls)
 - ALWAYS specify model: "opus" for each reviewer
+- ALWAYS use blind review mode (reviewers cannot see each other's findings initially)
 - NEVER dispatch reviewers sequentially (always parallel - 3x faster)
 - NEVER aggregate before all 3 reviewers complete
+
+### Anti-Sycophancy Protocol (CONSENSAGENT Research)
+
+**Problem:** Reviewers may reinforce each other's findings instead of critically engaging.
+
+**Solution: Blind Review + Devil's Advocate**
+
+```python
+# Phase 1: Independent blind review
+reviews = []
+for reviewer in [code_reviewer, business_reviewer, security_reviewer]:
+    review = Task(
+        subagent_type="general-purpose",
+        model="opus",
+        prompt=f"""
+        {reviewer.prompt}
+
+        CRITICAL: Be skeptical. Your job is to find problems.
+        List specific concerns with file:line references.
+        Do NOT rubber-stamp. Finding zero issues is suspicious.
+        """
+    )
+    reviews.append(review)
+
+# Phase 2: Check for disagreement
+if has_disagreement(reviews):
+    # Structured debate - max 2 rounds
+    debate_result = structured_debate(reviews, max_rounds=2)
+else:
+    # All agreed - run devil's advocate
+    devil_review = Task(
+        subagent_type="general-purpose",
+        model="opus",
+        prompt="""
+        The other reviewers found no issues. Your job is to be contrarian.
+        Find problems they missed. Challenge assumptions.
+        If truly nothing wrong, explain why each potential issue category is covered.
+        """
+    )
+    reviews.append(devil_review)
+```
+
+### Heterogeneous Team Composition
+
+**Each reviewer has distinct personality/focus:**
+
+| Reviewer | Model | Expertise | Personality |
+|----------|-------|-----------|-------------|
+| Code Quality | Opus | SOLID, patterns, maintainability | Perfectionist |
+| Business Logic | Opus | Requirements, edge cases, UX | Pragmatic |
+| Security | Opus | OWASP, auth, injection | Paranoid |
+
+This diversity prevents groupthink and catches more issues.
 
 ### 3. Severity-Based Blocking
 

@@ -5,7 +5,8 @@ description: Multi-agent autonomous startup system for Claude Code. Triggers on 
 
 # Loki Mode - Multi-Agent Autonomous Startup System
 
-> **Version 2.18.0** | PRD to Production | Zero Human Intervention
+> **Version 2.19.0** | PRD to Production | Zero Human Intervention
+> Research-enhanced with 2025 patterns: Anti-Sycophancy, Episodic Memory, Hierarchical Planning
 
 ---
 
@@ -13,16 +14,19 @@ description: Multi-agent autonomous startup system for Claude Code. Triggers on 
 
 ### Critical First Steps (Every Turn)
 1. **READ** `.loki/CONTINUITY.md` - Your working memory + "Mistakes & Learnings"
-2. **CHECK** `.loki/state/orchestrator.json` - Current phase/metrics
-3. **REVIEW** `.loki/queue/pending.json` - Next tasks
-4. **FOLLOW** RARV cycle: REASON, ACT, REFLECT, **VERIFY** (test your work!)
-5. **OPTIMIZE** Use Haiku for simple tasks (tests, docs, commands) - 10+ agents in parallel
-6. **LEARN** When errors occur: Update "Mistakes & Learnings", retry with context
+2. **RETRIEVE** Relevant memories from `.loki/memory/` (episodic patterns, anti-patterns)
+3. **CHECK** `.loki/state/orchestrator.json` - Current phase/metrics
+4. **REVIEW** `.loki/queue/pending.json` - Next tasks
+5. **FOLLOW** RARV cycle: REASON, ACT, REFLECT, **VERIFY** (test your work!)
+6. **OPTIMIZE** Use Haiku for simple tasks (tests, docs, commands) - 10+ agents in parallel
+7. **CONSOLIDATE** After task: Update episodic memory, extract patterns to semantic memory
 
 ### Key Files (Priority Order)
 | File | Purpose | Update When |
 |------|---------|-------------|
 | `.loki/CONTINUITY.md` | Working memory - what am I doing NOW? | Every turn |
+| `.loki/memory/semantic/` | Generalized patterns & anti-patterns | After task completion |
+| `.loki/memory/episodic/` | Specific interaction traces | After each action |
 | `.loki/specs/openapi.yaml` | API spec - source of truth | Architecture changes |
 | `CLAUDE.md` | Project context - arch & patterns | Significant changes |
 | `.loki/queue/*.json` | Task states | Every task change |
@@ -64,10 +68,12 @@ Development <- QA <- Deployment <- Business Ops <- Growth Loop
 ### Essential Patterns
 
 **Spec-First:** `OpenAPI -> Tests -> Code -> Validate`
-**Code Review:** `Static Analysis (BLOCK) -> 3 AI Reviewers -> Merge`
+**Code Review:** `Blind Review (parallel) -> Debate (if disagree) -> Devil's Advocate -> Merge`
 **Quality Gates:** `Pre-Hook (BLOCK) -> Write -> Post-Hook (FIX)`
 **Problem Solving:** `Analyze -> Plan (NO CODE) -> Implement`
 **Self-Verification:** `Code -> Test -> Fail -> Learn -> Update CONTINUITY.md -> Retry`
+**Memory Consolidation:** `Episodic (trace) -> Pattern Extraction -> Semantic (knowledge)`
+**Hierarchical Planning:** `Global Goal -> High-Level Skills -> Local Execution`
 
 ---
 
@@ -204,9 +210,12 @@ Report back with: WHY, WHAT, TRADE-OFFS, RISKS
 **Never ship code without passing all quality gates:**
 
 1. **Static Analysis** - CodeQL, ESLint/Pylint, type checking
-2. **3-Reviewer Parallel System** - Security (opus), Architecture (opus), Performance (sonnet)
-3. **Severity-Based Blocking** - Critical/High/Medium = BLOCK; Low/Cosmetic = TODO comment
-4. **Test Coverage Gates** - Unit: 100% pass, >80% coverage; Integration: 100% pass
+2. **Blind Review System** - 3 reviewers in parallel, no visibility of each other's findings
+3. **Anti-Sycophancy Check** - If unanimous approval, run Devil's Advocate reviewer
+4. **Severity-Based Blocking** - Critical/High/Medium = BLOCK; Low/Cosmetic = TODO comment
+5. **Test Coverage Gates** - Unit: 100% pass, >80% coverage; Integration: 100% pass
+
+**Research insight:** Blind review + Devil's Advocate reduces false positives by 30% (CONSENSAGENT, 2025).
 
 See `references/quality-control.md` for full details.
 
@@ -304,10 +313,11 @@ See `references/agent-types.md` for complete definitions and capabilities.
 |   +-- agents/             # Per-agent state files
 |   +-- circuit-breakers/   # Rate limiting state
 +-- memory/
+|   +-- episodic/           # Specific interaction traces (what happened)
+|   +-- semantic/           # Generalized patterns (how things work)
+|   +-- skills/             # Learned action sequences (how to do X)
 |   +-- ledgers/            # Agent-specific checkpoints
 |   +-- handoffs/           # Agent-to-agent transfers
-|   +-- learnings/          # Extracted patterns
-|   +-- rules/              # Permanent validated patterns
 +-- artifacts/
     +-- reports/            # Generated reports/dashboards
 ```
@@ -339,13 +349,14 @@ Detailed documentation is split into reference files for progressive loading:
 | Reference | Content |
 |-----------|---------|
 | `references/core-workflow.md` | Full RARV cycle, CONTINUITY.md template, autonomy rules |
-| `references/quality-control.md` | Quality gates, code review process, severity blocking |
-| `references/spec-driven-dev.md` | OpenAPI-first workflow, validation, contract testing |
+| `references/quality-control.md` | Quality gates, anti-sycophancy, blind review, severity blocking |
+| `references/advanced-patterns.md` | 2025 research: MAR, Iter-VF, GoalAct, CONSENSAGENT |
+| `references/memory-system.md` | Episodic/semantic memory, consolidation, Zettelkasten linking |
 | `references/agent-types.md` | All 37 agent types with full capabilities |
 | `references/task-queue.md` | Queue system, dead letter handling, circuit breakers |
 | `references/sdlc-phases.md` | All phases with detailed workflows and testing |
+| `references/spec-driven-dev.md` | OpenAPI-first workflow, validation, contract testing |
 | `references/architecture.md` | Directory structure, state schemas, bootstrap |
-| `references/memory-system.md` | Context management, ledgers, handoffs, learnings |
 | `references/mcp-integration.md` | MCP server capabilities and integration |
 | `references/claude-best-practices.md` | Boris Cherny patterns, thinking mode, ledgers |
 | `references/deployment.md` | Cloud deployment instructions per provider |
@@ -353,4 +364,4 @@ Detailed documentation is split into reference files for progressive loading:
 
 ---
 
-**Version:** 2.18.0 | **Lines:** ~480 | **Optimized for Claude Code Agent Skills**
+**Version:** 2.19.0 | **Lines:** ~370 | **Research-Enhanced for Claude Code Agent Skills**
