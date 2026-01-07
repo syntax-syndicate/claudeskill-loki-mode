@@ -233,6 +233,9 @@ See `references/tool-orchestration.md` for full implementation details.
 
 ## Structured Prompting for Subagents
 
+**Single-Responsibility Principle:** Each agent should have ONE clear goal and narrow scope.
+([UiPath Best Practices](https://www.uipath.com/blog/ai/agent-builder-best-practices))
+
 **Every subagent dispatch MUST include:**
 
 ```markdown

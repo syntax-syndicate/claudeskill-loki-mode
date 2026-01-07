@@ -29,6 +29,7 @@ ToolOrchestra achieves 70% cost reduction vs GPT-5 by explicitly optimizing for 
 ```json
 {
   "task_id": "task-2026-01-06-001",
+  "correlation_id": "session-abc123",
   "started_at": "2026-01-06T10:00:00Z",
   "completed_at": "2026-01-06T10:05:32Z",
   "metrics": {
@@ -50,6 +51,7 @@ ToolOrchestra achieves 70% cost reduction vs GPT-5 by explicitly optimizing for 
   "efficiency_factors": ["used_haiku_for_tests", "parallel_review"],
   "quality_pillars": {
     "tool_selection_correct": true,
+    "tool_reliability_rate": 0.95,
     "memory_retrieval_relevant": true,
     "goal_adherence": 1.0
   }
@@ -65,8 +67,16 @@ ToolOrchestra achieves 70% cost reduction vs GPT-5 by explicitly optimizing for 
    - `recovery_rate = successful_retries / total_retries`
    - Paper found "perfect tool sequencing but only 33% policy adherence" - surface metrics mask failures
 
-3. **Quality pillars beyond outcomes** ([Assessment Framework](https://arxiv.org/html/2512.12791v1))
-   - `tool_selection_correct`: Did we pick the right agent/tool?
+3. **Distributed tracing** ([Maxim AI](https://www.getmaxim.ai/articles/best-practices-for-building-production-ready-multi-agent-systems/))
+   - `correlation_id`: Links all tasks in a session for end-to-end tracing
+   - Essential for debugging multi-agent coordination failures
+
+4. **Tool reliability separate from selection** ([Stanford/Harvard](https://www.marktechpost.com/2025/12/24/this-ai-paper-from-stanford-and-harvard-explains-why-most-agentic-ai-systems-feel-impressive-in-demos-and-then-completely-fall-apart-in-real-use/))
+   - `tool_selection_correct`: Did we pick the right tool?
+   - `tool_reliability_rate`: Did the tool work as expected? (tools can fail even when correctly selected)
+   - Key insight: "Tool use reliability" is a primary demo-to-deployment gap
+
+5. **Quality pillars beyond outcomes** ([Assessment Framework](https://arxiv.org/html/2512.12791v1))
    - `memory_retrieval_relevant`: Did episodic/semantic retrieval help?
    - `goal_adherence`: Did we stay on task? (0.0-1.0 score)
 
@@ -540,6 +550,7 @@ Track these metrics in `.loki/metrics/dashboard.json`:
     },
     "quality_pillars": {
       "tool_selection_accuracy": 0.91,
+      "tool_reliability_rate": 0.93,
       "memory_retrieval_relevance": 0.84,
       "policy_adherence": 0.96
     },
@@ -584,9 +595,17 @@ Based on [Measurement Imbalance research (arXiv 2506.02064)](https://arxiv.org/a
 
 ## Sources
 
+**Efficiency & Orchestration:**
 - [NVIDIA ToolOrchestra](https://github.com/NVlabs/ToolOrchestra) - Multi-turn tool orchestration with RL
 - [ToolScale Dataset](https://huggingface.co/datasets/nvidia/ToolScale) - Training data synthesis
-- ToolOrchestra achieves #1 on GAIA benchmark, 37.1% on HLE (2.5x more efficient than GPT-5)
+
+**Evaluation Frameworks:**
 - [Assessment Framework for Agentic AI (arXiv 2512.12791)](https://arxiv.org/html/2512.12791v1) - Four-pillar evaluation model
 - [Measurement Imbalance in Agentic AI (arXiv 2506.02064)](https://arxiv.org/abs/2506.02064) - Multi-dimensional evaluation
-- [Adaptive Monitoring for Agentic AI (arXiv 2509.00115)](https://arxiv.org/abs/2509.00115) - AMDM algorithm for anomaly detection
+- [Adaptive Monitoring for Agentic AI (arXiv 2509.00115)](https://arxiv.org/abs/2509.00115) - AMDM algorithm
+
+**Best Practices:**
+- [Anthropic: Building Effective Agents](https://www.anthropic.com/research/building-effective-agents) - Simplicity, transparency, tool engineering
+- [Maxim AI: Production Multi-Agent Systems](https://www.getmaxim.ai/articles/best-practices-for-building-production-ready-multi-agent-systems/) - Orchestration patterns, distributed tracing
+- [UiPath: Agent Builder Best Practices](https://www.uipath.com/blog/ai/agent-builder-best-practices) - Single-responsibility, evaluations
+- [Stanford/Harvard: Demo-to-Deployment Gap](https://www.marktechpost.com/2025/12/24/this-ai-paper-from-stanford-and-harvard-explains-why-most-agentic-ai-systems-feel-impressive-in-demos-and-then-completely-fall-apart-in-real-use/) - Tool reliability as key failure mode
