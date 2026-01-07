@@ -18,6 +18,7 @@ claude --dangerously-skip-permissions
 SKILL.md                    # Main skill definition (read this first)
 references/                 # Detailed documentation (loaded progressively)
   advanced-patterns.md      # 2025 research patterns (MAR, Iter-VF, GoalAct)
+  tool-orchestration.md     # ToolOrchestra-inspired efficiency & rewards
   memory-system.md          # Episodic/semantic memory architecture
   quality-control.md        # Code review, anti-sycophancy protocol
   agent-types.md            # 37 specialized agent definitions
@@ -56,6 +57,10 @@ Every iteration follows: **R**eason -> **A**ct -> **R**eflect -> **V**erify
 - **Semantic**: Generalized patterns (`.loki/memory/semantic/`)
 - **Procedural**: Learned skills (`.loki/memory/skills/`)
 
+### Metrics System (ToolOrchestra-inspired)
+- **Efficiency**: Task cost tracking (`.loki/metrics/efficiency/`)
+- **Rewards**: Outcome/efficiency/preference signals (`.loki/metrics/rewards/`)
+
 ## Development Guidelines
 
 ### When Modifying SKILL.md
@@ -66,7 +71,7 @@ Every iteration follows: **R**eason -> **A**ct -> **R**eflect -> **V**erify
 
 ### Version Numbering
 Follows semantic versioning: MAJOR.MINOR.PATCH
-- Current: v2.27.0
+- Current: v2.28.0
 - MINOR bump for new features
 - PATCH bump for fixes
 

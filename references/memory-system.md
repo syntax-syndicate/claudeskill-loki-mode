@@ -71,6 +71,13 @@ Enhanced memory architecture based on 2025 research (MIRIX, A-Mem, MemGPT, AriGr
 |
 +-- learnings/                 # Extracted from errors
 |   +-- 2026-01-06.json
+
+# Related: Metrics System (separate from memory)
+# .loki/metrics/
+# +-- efficiency/              # Task cost tracking (time, agents, retries)
+# +-- rewards/                 # Outcome/efficiency/preference signals
+# +-- dashboard.json           # Rolling 7-day metrics summary
+# See references/tool-orchestration.md for details
 ```
 
 ---

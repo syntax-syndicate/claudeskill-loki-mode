@@ -84,6 +84,7 @@ PRD → Research → Architecture → Development → Testing → Deployment →
 3. **Production-Ready**: Not just code—handles deployment, monitoring, incident response, and business operations
 4. **Self-Improving**: Learns from mistakes, updates continuity logs, prevents repeated errors
 5. **Zero Babysitting**: Auto-resumes on rate limits, recovers from failures, runs until completion
+6. **Efficiency Optimized**: ToolOrchestra-inspired metrics track cost per task, reward signals drive continuous improvement
 
 ---
 
@@ -354,6 +355,8 @@ IMPLEMENT → REVIEW (parallel) → AGGREGATE → FIX → RE-REVIEW → COMPLETE
 .loki/
 ├── state/          # Orchestrator and agent states
 ├── queue/          # Task queue (pending, in-progress, completed, dead-letter)
+├── memory/         # Episodic, semantic, and procedural memory
+├── metrics/        # Efficiency tracking and reward signals
 ├── messages/       # Inter-agent communication
 ├── logs/           # Audit logs
 ├── config/         # Configuration files
