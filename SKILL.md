@@ -5,8 +5,8 @@ description: Multi-agent autonomous startup system for Claude Code. Triggers on 
 
 # Loki Mode - Multi-Agent Autonomous Startup System
 
-> **Version 2.27.0** | PRD to Production | Zero Human Intervention
-> Research-enhanced with 2025 patterns: Anti-Sycophancy, Episodic Memory, Hierarchical Planning
+> **Version 2.28.0** | PRD to Production | Zero Human Intervention
+> Research-enhanced with 2025 patterns: Anti-Sycophancy, Episodic Memory, Hierarchical Planning, ToolOrchestra Efficiency
 
 ---
 
@@ -19,7 +19,8 @@ description: Multi-agent autonomous startup system for Claude Code. Triggers on 
 4. **REVIEW** `.loki/queue/pending.json` - Next tasks
 5. **FOLLOW** RARV cycle: REASON, ACT, REFLECT, **VERIFY** (test your work!)
 6. **OPTIMIZE** Use Haiku for simple tasks (tests, docs, commands) - 10+ agents in parallel
-7. **CONSOLIDATE** After task: Update episodic memory, extract patterns to semantic memory
+7. **TRACK** Efficiency metrics: tokens, time, agent count per task
+8. **CONSOLIDATE** After task: Update episodic memory, extract patterns to semantic memory
 
 ### Key Files (Priority Order)
 | File | Purpose | Update When |
@@ -27,6 +28,7 @@ description: Multi-agent autonomous startup system for Claude Code. Triggers on 
 | `.loki/CONTINUITY.md` | Working memory - what am I doing NOW? | Every turn |
 | `.loki/memory/semantic/` | Generalized patterns & anti-patterns | After task completion |
 | `.loki/memory/episodic/` | Specific interaction traces | After each action |
+| `.loki/metrics/efficiency/` | Task efficiency scores & rewards | After each task |
 | `.loki/specs/openapi.yaml` | API spec - source of truth | Architecture changes |
 | `CLAUDE.md` | Project context - arch & patterns | Significant changes |
 | `.loki/queue/*.json` | Task states | Every task change |
@@ -74,6 +76,7 @@ Development <- QA <- Deployment <- Business Ops <- Growth Loop
 **Self-Verification:** `Code -> Test -> Fail -> Learn -> Update CONTINUITY.md -> Retry`
 **Memory Consolidation:** `Episodic (trace) -> Pattern Extraction -> Semantic (knowledge)`
 **Hierarchical Planning:** `Global Goal -> High-Level Skills -> Local Execution`
+**Tool Orchestration:** `Classify Complexity -> Select Agents -> Track Efficiency -> Reward Learning`
 
 ---
 
@@ -172,6 +175,41 @@ for test_file in test_files:
          description=f"Run tests: {test_file}",
          run_in_background=True)
 ```
+
+---
+
+## Tool Orchestration & Efficiency
+
+**Inspired by NVIDIA ToolOrchestra:** Track efficiency, learn from rewards, adapt agent selection.
+
+### Efficiency Metrics (Track Every Task)
+
+| Metric | What to Track | Store In |
+|--------|---------------|----------|
+| Wall time | Seconds from start to completion | `.loki/metrics/efficiency/` |
+| Agent count | Number of subagents spawned | `.loki/metrics/efficiency/` |
+| Retry count | Attempts before success | `.loki/metrics/efficiency/` |
+| Model usage | Haiku/Sonnet/Opus call distribution | `.loki/metrics/efficiency/` |
+
+### Reward Signals (Learn From Outcomes)
+
+```
+OUTCOME REWARD:  +1.0 (success) | 0.0 (partial) | -1.0 (failure)
+EFFICIENCY REWARD: 0.0-1.0 based on resources vs baseline
+PREFERENCE REWARD: Inferred from user actions (commit/revert/edit)
+```
+
+### Dynamic Agent Selection by Complexity
+
+| Complexity | Max Agents | Model | Review |
+|------------|------------|-------|--------|
+| Trivial | 1 | haiku | skip |
+| Simple | 2 | haiku | single |
+| Moderate | 4 | sonnet | standard (3 parallel) |
+| Complex | 8 | sonnet | deep (+ devil's advocate) |
+| Critical | 12 | opus | exhaustive + human checkpoint |
+
+See `references/tool-orchestration.md` for full implementation details.
 
 ---
 
@@ -318,6 +356,10 @@ See `references/agent-types.md` for complete definitions and capabilities.
 |   +-- skills/             # Learned action sequences (how to do X)
 |   +-- ledgers/            # Agent-specific checkpoints
 |   +-- handoffs/           # Agent-to-agent transfers
++-- metrics/
+|   +-- efficiency/         # Task efficiency scores (time, agents, retries)
+|   +-- rewards/            # Outcome/efficiency/preference rewards
+|   +-- dashboard.json      # Rolling metrics summary
 +-- artifacts/
     +-- reports/            # Generated reports/dashboards
 ```
@@ -351,6 +393,7 @@ Detailed documentation is split into reference files for progressive loading:
 | `references/core-workflow.md` | Full RARV cycle, CONTINUITY.md template, autonomy rules |
 | `references/quality-control.md` | Quality gates, anti-sycophancy, blind review, severity blocking |
 | `references/advanced-patterns.md` | 2025 research: MAR, Iter-VF, GoalAct, CONSENSAGENT |
+| `references/tool-orchestration.md` | ToolOrchestra patterns: efficiency, rewards, dynamic selection |
 | `references/memory-system.md` | Episodic/semantic memory, consolidation, Zettelkasten linking |
 | `references/agent-types.md` | All 37 agent types with full capabilities |
 | `references/task-queue.md` | Queue system, dead letter handling, circuit breakers |
@@ -364,4 +407,4 @@ Detailed documentation is split into reference files for progressive loading:
 
 ---
 
-**Version:** 2.27.0 | **Lines:** ~370 | **Research-Enhanced for Claude Code Agent Skills**
+**Version:** 2.28.0 | **Lines:** ~410 | **Research-Enhanced for Claude Code Agent Skills**
