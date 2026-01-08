@@ -5,6 +5,19 @@ All notable changes to Loki Mode will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.33.1] - 2026-01-08
+
+### Added - Advanced Task Tool Documentation
+
+**Source:** [Claude Code CHANGELOG.md](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md)
+
+**New Documentation:**
+- **Background Agents**: `run_in_background` returns output_file path, output truncated to 30K chars
+- **Agent Resumption**: `resume` parameter for continuing interrupted agents
+- **Use cases**: Context limits, rate limits, multi-session work, checkpoint/restore
+
+---
+
 ## [2.33.0] - 2026-01-08
 
 ### Added - AWS Bedrock Routing Mode Optimization
