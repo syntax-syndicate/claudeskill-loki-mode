@@ -181,4 +181,4 @@ Loki Mode itself is released under the MIT License.
 
 ---
 
-*Last updated: v2.34.0*
+*Last updated: v2.35.0*

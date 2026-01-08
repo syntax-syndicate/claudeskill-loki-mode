@@ -5,7 +5,7 @@ All notable changes to Loki Mode will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.34.0] - 2026-01-08
+## [2.35.0] - 2026-01-08
 
 ### Added - Anthropic Agent Harness Patterns & Claude Agent SDK
 
@@ -26,20 +26,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    - Detailed verification flow added to SKILL.md
    - Note: Playwright cannot detect browser-native alert modals
 
-**Key Quote:** "Claude mostly did well at verifying features end-to-end once explicitly prompted to use browser automation tools." - Anthropic Engineering
+3. **Advanced Task Tool Parameters**
+   - `run_in_background`: Returns output_file path, output truncated to 30K chars
+   - `resume`: Continue interrupted agents with full context
+   - Use cases: Context limits, rate limits, multi-session work
 
----
+### Fixed
 
-## [2.33.1] - 2026-01-08
-
-### Added - Advanced Task Tool Documentation
-
-**Source:** [Claude Code CHANGELOG.md](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md)
-
-**New Documentation:**
-- **Background Agents**: `run_in_background` returns output_file path, output truncated to 30K chars
-- **Agent Resumption**: `resume` parameter for continuing interrupted agents
-- **Use cases**: Context limits, rate limits, multi-session work, checkpoint/restore
+- Release workflow: Use gh CLI instead of softprops action for atomic release creation
 
 ---
 
