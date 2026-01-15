@@ -5,6 +5,67 @@ All notable changes to Loki Mode will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.36.5] - 2026-01-15
+
+### Added - Antigravity/Amazon Q Comparison and Transformation Patterns
+
+**Deep comparison with Google Antigravity (Gemini 3, 76.2% SWE-bench) and Amazon Q Developer (66% SWE-bench) validated by Opus feedback loop.**
+
+#### Google Antigravity Features Analyzed
+
+| Feature | Antigravity | Loki Mode | Assessment |
+|---------|-------------|-----------|------------|
+| Manager Surface | Interactive agent control | Monitoring dashboard | Different purpose (human vs autonomous) |
+| Artifacts System | Screenshots, video, diagrams | Traces, tests | Enhanced: Artifact generation added |
+| Browser Subagents | Full recording, DOM capture | Playwright MCP | Equivalent + screenshots |
+| Outcome Verification | Trust artifacts | 7 quality gates | Loki Mode superior |
+| Knowledge Base | Simple snippets | 3-tier memory | Loki Mode superior |
+| Multi-Model | Gemini 3, Claude, GPT-OSS | Opus/Sonnet/Haiku | Both multi-model |
+
+#### Amazon Q Developer Features Analyzed
+
+| Feature | Amazon Q | Loki Mode | Assessment |
+|---------|----------|-----------|------------|
+| SWE-Bench | 66% verified | Uses Claude | Framework, not model |
+| Code Transformation | /transform (Java, SQL, .NET) | Not present | **ADOPTED** |
+| MCP Support | Full protocol | Playwright MCP | Equivalent |
+| Model Routing | Bedrock | 4-tier confidence | Loki Mode superior |
+| CLI Agent | Fast local | run.sh wrapper | Equivalent |
+
+#### Patterns ADOPTED (HIGH/MEDIUM Priority)
+
+**1. Code Transformation Agent (Amazon Q):**
+- Dedicated workflows for legacy modernization
+- Language upgrades (Java 8->21, Python 2->3, Node 16->22)
+- Database migrations (Oracle->PostgreSQL, MySQL->PostgreSQL)
+- Framework modernization (Angular->React, .NET Framework->.NET Core)
+- Deterministic success criteria: tests pass, benchmarks met
+
+**2. Artifact Generation (Antigravity):**
+- Auto-generate verifiable deliverables
+- Triggers: on_phase_complete, on_feature_complete, on_deployment
+- Types: verification_report, architecture_diff, screenshot_gallery
+- "Outcome verification" instead of "line-by-line auditing"
+
+#### Patterns NOT Adopted (with justification)
+
+| Pattern | Source | Why Not Adopted |
+|---------|--------|-----------------|
+| Manager Surface (interactive) | Antigravity | Requires human control, violates zero-intervention |
+| Video Recording | Antigravity | Requires human review |
+| Interactive Agent Spawning | Antigravity | Violates autonomous design |
+
+#### Where Loki Mode is SUPERIOR
+
+1. **Memory System**: 3-tier (episodic/semantic/procedural) vs simple snippets
+2. **Quality Control**: 7 gates + blind review + devil's advocate vs artifact trust
+3. **Model Routing**: 4-tier confidence + complexity matrix vs basic routing
+4. **Autonomy**: Zero human intervention by design vs human orchestration
+
+**See `docs/COMPARISON.md` for full competitive analysis.**
+
+---
+
 ## [2.36.4] - 2026-01-15
 
 ### Added - Codex/Kiro Comparison and Quality Enhancement Patterns

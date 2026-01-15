@@ -5,7 +5,7 @@ description: Multi-agent autonomous startup system for Claude Code. Triggers on 
 
 # Loki Mode - Multi-Agent Autonomous Startup System
 
-> **Version 2.36.4** | PRD to Production | Zero Human Intervention
+> **Version 2.36.5** | PRD to Production | Zero Human Intervention
 > Research-enhanced: OpenAI SDK, DeepMind, Anthropic, AWS Bedrock, Agent SDK, HN Production (2025)
 
 ---
@@ -411,6 +411,127 @@ NOT: "Refactor the auth file"
 ## WHEN COMPLETE
 Report back with: WHY, WHAT, TRADE-OFFS, RISKS
 ```
+
+---
+
+## Code Transformation Agent (Amazon Q Pattern)
+
+**Dedicated workflows for legacy modernization - narrow scope, deterministic verification.**
+
+```yaml
+transformation_agent:
+  purpose: "Autonomous code migration without human intervention"
+  trigger: "/transform or PRD mentions migration/upgrade/modernization"
+
+  workflows:
+    language_upgrade:
+      steps:
+        1. Analyze current version and dependencies
+        2. Identify deprecated APIs and breaking changes
+        3. Generate migration plan with risk assessment
+        4. Apply transformations incrementally
+        5. Run compatibility tests after each change
+        6. Validate performance benchmarks
+      examples:
+        - "Java 8 to Java 21"
+        - "Python 2 to Python 3"
+        - "Node 16 to Node 22"
+
+    database_migration:
+      steps:
+        1. Schema diff analysis (source vs target)
+        2. SQL dialect conversion rules
+        3. Data type mapping
+        4. Generate migration scripts
+        5. Run verification queries
+        6. Validate data integrity
+      examples:
+        - "Oracle to PostgreSQL"
+        - "MySQL to PostgreSQL"
+        - "MongoDB to PostgreSQL"
+
+    framework_modernization:
+      steps:
+        1. Dependency audit and compatibility matrix
+        2. Breaking change detection
+        3. Code pattern updates (deprecated -> modern)
+        4. Test suite adaptation
+        5. Performance regression testing
+      examples:
+        - "Angular to React"
+        - ".NET Framework to .NET Core"
+        - "Express to Fastify"
+
+  success_criteria:
+    - All existing tests pass
+    - No regression in performance (< 5% degradation)
+    - Static analysis clean
+    - API compatibility maintained (or documented breaks)
+```
+
+**Why this fits autonomous operation:**
+- Narrow scope with clear boundaries
+- Deterministic success criteria (tests pass, benchmarks met)
+- No subjective judgment required
+- High value, repetitive tasks
+
+---
+
+## Artifact Generation (Antigravity Pattern)
+
+**Auto-generate verifiable deliverables for audit trail without human intervention.**
+
+```yaml
+artifact_generation:
+  purpose: "Prove autonomous work without line-by-line code review"
+  location: ".loki/artifacts/{date}/{phase}/"
+
+  triggers:
+    on_phase_complete:
+      - verification_report: "Summary of tests passed, coverage, static analysis"
+      - architecture_diff: "Mermaid diagram showing changes from previous state"
+      - decision_log: "Key decisions made with rationale (from CONTINUITY.md)"
+
+    on_feature_complete:
+      - screenshot: "Key UI states captured via Playwright"
+      - api_diff: "OpenAPI spec changes highlighted"
+      - test_summary: "Unit, integration, E2E results"
+
+    on_deployment:
+      - release_notes: "Auto-generated from commit history"
+      - rollback_plan: "Steps to revert if issues detected"
+      - monitoring_baseline: "Expected metrics post-deploy"
+
+  artifact_types:
+    verification_report:
+      format: "markdown"
+      contents:
+        - Phase name and duration
+        - Tasks completed (from queue)
+        - Quality gate results (7 gates)
+        - Coverage metrics
+        - Known issues / TODOs
+
+    architecture_diff:
+      format: "mermaid diagram"
+      contents:
+        - Components added/modified/removed
+        - Dependency changes
+        - Data flow changes
+
+    screenshot_gallery:
+      format: "png + markdown index"
+      capture:
+        - Critical user flows
+        - Error states
+        - Before/after comparisons
+```
+
+**Why this matters for autonomous operation:**
+- Creates audit trail without human during execution
+- Enables async human review if needed later
+- Proves work quality through outcomes, not code inspection
+- Aligns with "outcome verification" over "line-by-line auditing"
 
 ---
 
@@ -977,4 +1098,4 @@ Detailed documentation is split into reference files for progressive loading:
 
 ---
 
-**Version:** 2.36.4 | **Lines:** ~950 | **Research-Enhanced: 2026 Patterns (arXiv, HN, Labs, OpenCode, Cursor, Devin, Codex, Kiro)**
+**Version:** 2.36.5 | **Lines:** ~1050 | **Research-Enhanced: 2026 Patterns (arXiv, HN, Labs, OpenCode, Cursor, Devin, Codex, Kiro, Antigravity, Amazon Q)**
