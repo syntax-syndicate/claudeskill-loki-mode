@@ -110,9 +110,15 @@ for task in tasks:
     else:
         priority_tag = "priority-low"
 
+    # Get title from payload (handle both dict and string)
+    if isinstance(payload, dict):
+        title = payload.get('action', payload.get('description', 'Task'))
+    else:
+        title = 'Task'
+
     vibe_task = {
         "id": f"loki-{task_id}",
-        "title": f"[{agent_type}] {payload.get('action', 'Task')}",
+        "title": f"[{agent_type}] {title}",
         "description": description,
         "status": vibe_status,
         "agent": "claude-code",
