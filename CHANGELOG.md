@@ -49,6 +49,281 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.36.11] - 2026-01-17
+
+### Added - External Research Integration (Velocity-Quality, OptiMind, k8s-valkey-operator)
+
+**Analyzed three external sources and integrated key patterns into SKILL.md.**
+
+#### Research Sources Analyzed
+
+| Source | Key Findings |
+|--------|--------------|
+| [arXiv 2511.04427v2](https://arxiv.org/abs/2511.04427) | LLM agents: 281% velocity gains are TRANSIENT, 30% warnings + 41% complexity are PERSISTENT |
+| [Microsoft OptiMind](https://ai.azure.com/catalog/models/microsoft-optimind-sft) | Problem classification, domain expert hints, ensemble solution generation |
+| [k8s-valkey-operator](https://github.com/smoketurner/k8s-valkey-operator) | Formal state machines, idempotent operations, Kubernetes reconciliation patterns |
+
+#### Improvements Made
+
+1. **Velocity-Quality Feedback Loop (CRITICAL)** (New Section)
+   - Documented the arXiv finding: 3.28x complexity OR 4.94x warnings cancels ALL velocity gains
+   - Added mandatory quality checks per task (static analysis, complexity, coverage)
+   - Zero tolerance threshold for new warnings
+
+2. **Problem Classification with Expert Hints** (New Section - OptiMind Pattern)
+   - Categories: crud_operations, authentication, database_operations, frontend_components, infrastructure
+   - Domain-specific hints and common errors per category
+   - Enables targeted guidance before implementation
+
+3. **Ensemble Solution Generation** (New Section - OptiMind Pattern)
+   - Generate multiple solutions for complex tasks
+   - Select by consensus or feedback-based ranking
+   - When to use: architecture decisions, optimization problems
+
+4. **Formal State Machines** (New Section - k8s-valkey-operator Pattern)
+   - Explicit SDLC phase state machine with defined transitions
+   - Idempotent operations pattern (safe under retry)
+   - State invariants for each phase
+
+5. **Essential Patterns Updated**
+   - Added: Quality Over Velocity, Problem Classification, Ensemble Solutions, Idempotent Operations, Formal State Machines
+
+#### Key Insight
+
+The arXiv research provides empirical evidence for why Loki Mode's quality gates are critical: without them, velocity gains are completely negated by accumulated technical debt.
+
+---
+
+## [2.36.10] - 2026-01-17
+
+### Added - Anthropic Best Practices Integration
+
+**Validated SKILL.md against Anthropic's official guidance and added genuine improvements.**
+
+#### Research Sources Analyzed
+
+| Source | Key Findings |
+|--------|--------------|
+| [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) | 5 workflow patterns, simplicity emphasis |
+| [Claude Code Best Practices](https://www.anthropic.com/engineering/claude-code-best-practices) | Explore-Plan-Code, thinking modes, TDD |
+| [Enterprise AI Transformation](https://claude.com/blog/driving-ai-transformation-with-claude) | Bottleneck targeting, quality focus |
+
+#### Improvements Made
+
+1. **Simplicity First Principle** (Essential Patterns)
+   - Added: "Start simple. Only escalate complexity when simpler approaches fail."
+   - Rationale: Anthropic emphasizes "most successful implementations use simple, composable patterns"
+
+2. **TDD Workflow** (Essential Patterns)
+   - Added: `Write failing tests -> Implement to pass -> Refactor`
+   - Rationale: Anthropic recommends test-first development as primary workflow
+
+3. **Extended Thinking Mode** (New Section)
+   - Added guidance for "think", "think hard", "ultrathink" prefixes
+   - When to use for Discovery, Architecture, and critical decisions
+   - When NOT to use (Haiku tasks, obvious implementations)
+
+4. **Visual Design Input** (New Section)
+   - Added workflow for consuming design mockups and screenshots
+   - Integration with Discovery and Development phases
+   - Combines with Playwright for visual regression
+
+#### Already Aligned (Validated)
+
+These patterns were already correctly implemented:
+- Explore-Plan-Code workflow
+- Confidence-based routing
+- Parallelization with Haiku
+- Multi-Claude workflows with git worktrees
+- Context management and proactive compaction
+- One Feature at a Time rule
+
+---
+
+## [2.36.9] - 2026-01-17
+
+### Added - MCP Integration Reference with Parallel AI
+
+**Created `references/mcp-integration.md` documenting recommended MCP servers for Loki Mode.**
+
+#### Parallel AI Integration
+
+Added Parallel AI as recommended MCP server for enhanced web research:
+
+| Capability | Benefit for Loki Mode |
+|------------|----------------------|
+| Deep Research API | 48% accuracy on complex research (vs native LLM search) |
+| Evidence-based results | Provenance for every output - aligns with quality gates |
+| Monitor API | Track dependency updates, security advisories, competitor changes |
+| Task API | Structured research with custom schemas |
+
+**SDLC Phases Enhanced:** Discovery, Web Research, Continuous Monitoring
+
+#### Also Documented
+
+- Playwright MCP for E2E testing (existing)
+- MCP configuration locations
+- Usage patterns in Loki Mode agents
+- Evaluation criteria for new MCP servers
+
+---
+
+## [2.36.8] - 2026-01-17
+
+### Changed - SDLC Phase-Based Model Assignment
+
+**Updated model selection strategy to assign models by SDLC phase rather than task type.**
+
+#### Previous Model Assignment
+| Model | Use For |
+|-------|---------|
+| Opus 4.5 | Planning only - architecture & high-level decisions |
+| Sonnet 4.5 | Development - implementation & functional testing |
+| Haiku 4.5 | Operations - simple tasks & monitoring |
+
+#### New Model Assignment (SDLC Phase-Based)
+| Model | SDLC Phases | Examples |
+|-------|-------------|----------|
+| **Opus 4.5** | Bootstrap, Discovery, Architecture, Development | PRD analysis, system design, feature implementation, API endpoints, complex bug fixes |
+| **Sonnet 4.5** | QA, Deployment | Integration/E2E tests, security scanning, performance testing, deployment automation |
+| **Haiku 4.5** | All other operations (in parallel) | Unit tests, docs, bash commands, linting, monitoring, health checks |
+
+#### Rationale
+- **Opus for Development**: Higher quality code generation for core implementation work
+- **Sonnet for QA/Deployment**: Cost-effective for testing and deployment automation
+- **Haiku in parallel**: Maximum parallelization for operations tasks
+
+#### Files Modified
+- `SKILL.md`: Updated Model Selection Strategy section (lines 163-210)
+- `SKILL.md`: Updated Quick Reference line 21
+- `SKILL.md`: Updated Dynamic Agent Selection table
+- `docs/COMPARISON.md`: Added Zencoder comparison section, updated version history
+
+---
+
+## [2.36.7] - 2026-01-17
+
+### Added - Zencoder/Zenflow CI/CD Automation Patterns
+
+**Comprehensive analysis of Zencoder.ai (Zenflow, Zen Agents, Zentester) identified 3 genuine gaps that have been adopted.**
+
+#### Zencoder Features Analyzed
+
+| Feature | Zencoder | Loki Mode | Assessment |
+|---------|----------|-----------|------------|
+| Four Pillars | Structured Workflows, SDD, Multi-Agent Verification, Parallel Execution | SDLC + RARV + 7 Gates + Worktrees | TIE |
+| Spec-Driven Development | Specs as first-class objects | OpenAPI-first | TIE |
+| Multi-Agent Verification | Model diversity (Claude vs OpenAI, 54% improvement) | 3 blind reviewers + devil's advocate | Different (N/A for Claude Code) |
+| Quality Gates | Built-in verification loops | 7 explicit gates + anti-sycophancy | Loki Mode |
+| Memory System | Not documented | 3-tier episodic/semantic/procedural | Loki Mode |
+| Agent Specialization | Custom Zen Agents | 37 pre-defined specialized | Loki Mode |
+| CI Failure Analysis | Explicit pattern with auto-fix | DevOps agent only | **ADOPTED** |
+| Review Comment Resolution | Auto-apply simple changes | Manual review | **ADOPTED** |
+| Dependency Management | Scheduled PRs, one group at a time | Mentioned only | **ADOPTED** |
+| Multi-Repo Support | Full cross-repo | Single repo | Zencoder (N/A for Claude Code) |
+
+#### Patterns ADOPTED from Zencoder (HIGH Priority)
+
+**1. CI Failure Analysis and Auto-Resolution:**
+- Analyze cryptic CI logs automatically
+- Classify failure type: regression vs flakiness vs environment vs dependency
+- Auto-fix 90% of flaky tests
+- Reduce time-to-green by 50%
+
+**2. Automated Review Comment Resolution:**
+- Auto-apply straightforward review comments
+- Categories: input validation, missing tests, error messages, small refactoring, documentation
+- Skip: architecture changes, API modifications, security-sensitive code
+- Commit with "fix: address review comments (auto-applied)"
+
+**3. Continuous Dependency Management:**
+- Schedule: weekly or bi-weekly scans
+- Strategy: one dependency group at a time
+- Prioritize: security > major > minor > patch
+- Keep PRs small (1-3 packages per PR)
+- Track upgrade history in semantic memory
+
+#### Patterns NOT Adopted (with justification)
+
+| Pattern | Zencoder | Why Not Adopted |
+|---------|----------|-----------------|
+| Model Diversity | Claude critiques OpenAI code | Claude Code only has Claude models |
+| Multi-Repo Support | Cross-repo changes | Claude Code is single-context |
+| IDE Plugins | VS Code, JetBrains | Loki Mode is a skill, not a plugin |
+| Repo Grokking | Proprietary indexing | Claude Code has native exploration |
+
+#### Where Loki Mode Remains SUPERIOR
+
+1. **Quality Control**: 7 gates + blind review + devil's advocate vs built-in loops
+2. **Memory System**: 3-tier (episodic/semantic/procedural) vs none documented
+3. **Agent Specialization**: 37 pre-defined types vs custom-only
+4. **Anti-Sycophancy**: CONSENSAGENT patterns vs not mentioned
+5. **Autonomy**: Zero human intervention design vs human orchestration
+
+---
+
+## [2.36.6] - 2026-01-17
+
+### Validated - 2026 Research Resources (RLM, Token-Aware Planning, Claude Code Patterns)
+
+**Comprehensive validation of 8 external resources against Loki Mode v2.36.5. All patterns already implemented or not applicable.**
+
+#### Resources Analyzed
+
+| Resource | Key Patterns | Assessment |
+|----------|--------------|------------|
+| **arXiv 2512.24601 (RLM)** | Python REPL context, recursive self-invocation, 10M+ token handling | Different use case - extreme context scenarios, not Claude Code workflows |
+| **ysz/recursive-llm** | Depth-bound recursion, async parallelization, two-model optimization | Already covered via sub-agent architecture + parallel Haiku agents |
+| **Token-aware planning** | Context rot (<256k effective), sub-agent isolation, compaction | Already comprehensive (SKILL.md:880-920, run.sh compaction) |
+| **davila7/claude-code-templates** | 100+ agents, semantic validator, hooks with matchers | Loki has 37 specialized agents (better organization), guardrails, hooks |
+| **pguso/agents-from-scratch** | "Agents are loops, state, constraints" | Educational - Loki Mode IS the production implementation |
+| **Boris Cherny Tips (Jan 2026)** | 5 Claudes parallel, Opus thinking, ~42hr sessions, hooks | All present: 10+ Haiku parallel, model tiering, CONTINUITY.md |
+| **Inner/outer loop bottleneck** | AI dev creates CI/CD bottleneck | Loki Mode IS the solution - automated quality gates |
+| **azidan/codemap** | Symbol-to-line-range mapping, hash staleness, 60-80% token savings | Complementary MCP tool, not a pattern to implement |
+
+#### Key Findings
+
+**1. Recursive Language Models (MIT, Dec 2025):**
+- Handles 10M+ tokens via Python REPL context storage
+- Two-model optimization (expensive root, cheap branches)
+- Assessment: Specialized for extreme context, not typical Claude Code workflows
+- Loki Mode's CONTINUITY.md + compaction + sub-agents already sufficient
+
+**2. Token-Aware Planning / Context Engineering:**
+- Context rot phenomenon: effective window <256k even with 1M limit
+- Sub-agent architectures with clean context windows
+- ADK compaction triggers at configurable thresholds
+- Assessment: Already implemented (COMPACTION_INTERVAL=25, sub-agent isolation)
+
+**3. Claude Code Templates (davila7):**
+- 100+ agents, 159+ commands, semantic/reference validators
+- Proper hook specifications with tool matchers
+- Assessment: Loki has superior architecture (37 specialized vs generic templates)
+
+**4. CodeMap (azidan):**
+- Symbol-to-line-range precision reduces tokens 60-80%
+- Per-directory distributed indexing
+- Hash-based staleness detection
+- Assessment: Complementary MCP tool for I/O optimization, not core pattern
+
+#### Patterns Already Present in Loki Mode
+
+| External Pattern | Loki Mode Implementation |
+|-----------------|-------------------------|
+| Parallel execution (5 Claudes) | 10+ Haiku agents in parallel (SKILL.md:21) |
+| Model tiering | Opus/Sonnet/Haiku with explicit categories (SKILL.md:163-244) |
+| Background agents | run_in_background parameter (SKILL.md:247-267) |
+| Context compaction | COMPACTION_INTERVAL=25 (run.sh:140) |
+| Sub-agent isolation | Fresh context per sub-task (SKILL.md:920-928) |
+| Hooks system | Event-driven hooks (SKILL.md:758-792) |
+| CI/CD automation | 7 quality gates, deterministic outer loops (SKILL.md:540-558) |
+
+#### Conclusion
+
+**No updates needed.** Loki Mode v2.36.5 implements a superset of all analyzed patterns. Resources validated existing architecture rather than identifying gaps.
+
+---
+
 ## [2.36.5] - 2026-01-15
 
 ### Added - Antigravity/Amazon Q Comparison and Transformation Patterns
